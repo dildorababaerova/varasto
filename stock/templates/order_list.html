@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block title %}Omat tilaukset{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h3 class="mb-0"><i class="fas fa-clipboard-list me-2"></i>Omat tilaukset</h3>
+    </div>
+    <div class="card-body">
+        {% if orders %}
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Tilausnro</th>
+                        <th>Päivämäärä</th>
+                        <th>Tuotteet</th>
+                        <th>Tila</th>
+                        <th>Toiminnot</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td>#{{ order.id }}</td>
+                        <td>{{ order.created_at|date:"d.m.Y H:i" }}</td>
+                        <td>
+                            {% for item in order.cart.items.all %}
+                            {{ item.quantity }} × {{ item.item.nimike }}<br>
+                            {% endfor %}
+                        </td>
+                        <td>
+                            <span class="badge 
+                                {% if order.status == 'pending' %}bg-secondary
+                                {% elif order.status == 'processing' %}bg-info
+                                {% elif order.status == 'completed' %}bg-warning
+                                {% elif order.status == 'delivered' %}bg-success{% endif %}">
+                                {{ order.get_status_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="{% url 'order_detail' order.id %}" class="btn btn-sm btn-primary">
+                                <i class="fas fa-eye"></i> Näytä
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle me-2"></i>Ei tilauksia
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

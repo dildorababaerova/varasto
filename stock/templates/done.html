@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="alert alert-success">
+    <h2>Tilaus vastaanotettu!</h2>
+    <p>Varastotiimi käsittelee tilauksesi.</p>
+    <a href="{% url 'stock' %}" class="btn btn-primary">Palaa tuotelistaukseen</a>
+</div>
+{% endblock %}

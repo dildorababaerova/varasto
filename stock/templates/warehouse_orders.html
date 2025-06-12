@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Varaston tilaukset</h1>
+    
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <a class="nav-link {% if current_status == 'pending' %}active{% endif %}" 
+               href="{% url 'warehouse_orders' %}?status=pending">
+                Odottavat
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if current_status == 'processing' %}active{% endif %}" 
+               href="{% url 'warehouse_orders' %}?status=processing">
+                Käsittelyssä
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if current_status == 'completed' %}active{% endif %}" 
+               href="{% url 'warehouse_orders' %}?status=completed">
+                Valmiit
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link {% if current_status == 'delivered' %}active{% endif %}" 
+               href="{% url 'warehouse_orders' %}?status=delivered">
+                Toimitettu
+            </a>
+        </li>
+    </ul>
+    
+    <div class="list-group">
+        {% for order in orders %}
+        <div class="list-group-item">
+            <div class="d-flex justify-content-between">
+                <h5>Tilaus #{{ order.id }} - {{ order.user.username }}</h5>
+                <span class="badge bg-primary">{{ order.get_status_display }}</span>
+            </div>
+            <p>Luotu: {{ order.created_at|date:"d.m.Y H:i" }}</p>
+            
+            <form method="post" class="mt-2">
+                {% csrf_token %}
+                <input type="hidden" name="order_id" value="{{ order.id }}">
+                <div class="row">
+                    <div class="col-md-4">
+                        <select name="status" class="form-select">
+                            {% for value, label in order.STATUS_CHOICES %}
+                            <option value="{{ value }}" {% if order.status == value %}selected{% endif %}>
+                                {{ label }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <input type="text" name="comment" class="form-control" placeholder="Päivitys">
+                    </div>
+                    <div class="col-md-2">
+                        <button type="submit" class="btn btn-primary">Päivitä</button>
+                    </div>
+                </div>
+            </form>
+            
+            <a href="{% url 'warehouse_order_detail' order.id %}" class="btn btn-sm btn-info mt-2">Näytä tiedot</a>
+        </div>
+        {% empty %}
+        <div class="alert alert-info">Ei tilauksia tässä tilassa</div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

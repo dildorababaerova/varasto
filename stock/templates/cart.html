@@ -1,0 +1,64 @@
+<!-- cart.html -->
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1><i class="fas fa-shopping-cart me-2"></i>Ostoskori</h1>
+    
+    {% if cart and cart.items.all %}
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead class="table-light">
+                <tr>
+                    <th>Koodi</th>
+                    <th>Nimike</th>
+                    <th>Lisanimike</th>
+                    <th>Määrä</th>
+                    <th>Toiminnot</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in cart.items.all %}
+                <tr>
+                    <td>{{ item.item.koodi }}</td>
+                    <td>{{ item.item.nimike }}</td>
+                    <td>{{ item.item.lisanimike }}</td>
+                    <td>
+                        <div class="input-group" style="max-width: 120px;">
+                            <a href="{% url 'decrease_item' item.id %}" class="btn btn-outline-secondary">-</a>
+                            <input type="text" class="form-control text-center" value="{{ item.quantity }}" readonly>
+                            <a href="{% url 'increase_item' item.id %}" class="btn btn-outline-secondary">+</a>
+                        </div>
+                    </td>
+                    <td>
+                        <a href="{% url 'remove_from_cart' item.id %}" class="btn btn-danger btn-sm">
+                            <i class="fas fa-trash-alt"></i> Poista
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="d-flex justify-content-between mt-4">
+        <a href="{% url 'stock_list' %}" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left me-1"></i> Jatka ostoksia
+        </a>
+        <form method="post" class="d-inline">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-success">
+                <i class="fas fa-paper-plane me-1"></i> Lähetä tilaus
+            </button>
+        </form>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+        <p class="mb-3">Ostoskori on tyhjä</p>
+        <a href="{% url 'stock_list' %}" class="btn btn-primary">
+            <i class="fas fa-boxes me-1"></i> Selaa tuotteita
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

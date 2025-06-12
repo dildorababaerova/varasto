@@ -1,0 +1,26 @@
+{% extends "emails/base_email.html" %}
+
+{% block content %}
+<p>Hei {{ order.user.username }},</p>
+
+<p>Tilauksesi #{{ order.id }} tila on nyt: {{ order.get_status_display }}</p>
+
+<h3>Tilauksen tiedot:</h3>
+<ul>
+    <li>Tilausnumero: #{{ order.id }}</li>
+    <li>Päivämäärä: {{ order.created_at|date:"d.m.Y H:i" }}</li>
+</ul>
+
+<h3>Tuotteet:</h3>
+<ul>
+{% for item in order.cart.items.all %}
+    <li>{{ item.item.nimike }} - {{ item.quantity }} kpl</li>
+{% endfor %}
+</ul>
+
+{% if order.comment %}
+<p><strong>Kommentti:</strong> {{ order.comment }}</p>
+{% endif %}
+
+<p>Terveisin,<br>Varastojärjestelmä</p>
+{% endblock %}

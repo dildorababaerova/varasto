@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}{{ item.nimike }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">
+                        <i class="fas fa-box me-2"></i>{{ item.nimike }}
+                    </h3>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5>Tiedot</h5>
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item">
+                                    <strong>Koodi:</strong> {{ item.koodi }}
+                                </li>
+                                <li class="list-group-item">
+                                    <strong>Lisänimike:</strong> {{ item.lisanimike }}
+                                </li>
+                                <li class="list-group-item">
+                                    <strong>Varastosaldo:</strong> {{ item.saldo }}
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <img src="https://via.placeholder.com/300x200?text=Tuotekuva" 
+                                 alt="{{ item.nimike }}" 
+                                 class="img-fluid rounded">
+                        </div>
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="id_quantity" class="form-label">Määrä</label>
+                                    {{ form.quantity }}
+                                    {% if form.quantity.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.quantity.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-cart-plus me-2"></i>Lisää ostoskoriin
+                        </button>
+                        <a href="{% url 'stock_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Takaisin listaan
+                        </a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

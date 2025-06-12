@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}{{ stock.title }}{% endblock %}
+
+{% block content %}
+
+<div class="details">
+    <h3><a href="{% url 'unfinished_orders' %}">Uudet tilaukset</a></h3>
+    <h3><a href="{% url 'unfinished_orders' %}">Vanhat tilaukset</a></h3>
+    {% for x in orders %}
+    <li>{{ x.item }} {{ x.comment }} {{ x.completed }}</li>
+    {% endfor %}
+
+</div>
+{% endblock %}
