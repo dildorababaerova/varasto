@@ -11,12 +11,15 @@ import logging
 from .models import Item, Cart, CartItem, Order
 from .forms import AddToCartForm, OrderCommentForm, OrderStatusForm
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 logger = logging.getLogger(__name__)
 
 
 def home(request):
+    logger.debug("Это DEBUG сообщение")
+    logger.info("Это INFO сообщение")
+    logger.warning("Это WARNING сообщение")
+    logger.error("Это ERROR сообщение")
     return render(request, 'main.html')
 
 @login_required
@@ -83,6 +86,9 @@ def cart_view(request):
                 # process_order() transaction sisältä
                 # Tämä metodi voi sisältää logiikan, joka vähentää saldoa varastosta
                 order.process_order()
+            
+            order.send_new_order_notification()
+            # logger.info(f"Order #{order.id} created, notifications sent.")
             
             messages.success(request, 'Tilaus onnistui! Tilauksen tiedot on lähetetty sähköpostiisi.')
             return redirect('order_detail', order_id=order.id)
@@ -162,28 +168,22 @@ def warehouse_orders(request):
     
     status = request.GET.get('status', 'pending')
     orders = Order.objects.filter(status=status).order_by('created_at')
-    logger.debug('Filtered orders with status %s: %s', status, orders)
     
     if request.method == 'POST':
         order_id = request.POST.get('order_id')
-        logger.debug('Order ID: %s', order_id)
         order = get_object_or_404(Order, id=order_id)
         old_status = order.status
         form = OrderStatusForm(request.POST, instance=order)
-        logger.debug("Form data: %s", form)
+        
         if form.is_valid():
             order = form.save()
             
-            # Send notifications if status changed
             if old_status != order.status:
-                status=order.send_status_notification()
-                logger.debug('Status notification sent: %s', status)
-
-                # Special notification when order is ready
+                order.send_status_notification()
+                
                 if order.status == 'ready':
-                    ready=order.send_ready_notification()
-                    logger.debug('Ready notification sent: %s', ready)
-
+                    order.send_ready_notification()
+            
             messages.success(request, "Tilauksen tila päivitetty")
             return redirect('warehouse_orders')
     else:
@@ -194,7 +194,6 @@ def warehouse_orders(request):
         'current_status': status,
         'form': form,
     })
-
 
 def test_email(request):
     try:

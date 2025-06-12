@@ -62,7 +62,7 @@
                 </div>
             </form>
             
-            <a href="{% url 'warehouse_order_detail' order.id %}" class="btn btn-sm btn-info mt-2">Näytä tiedot</a>
+            <a href="{% url 'order_detail' order.id %}" class="btn btn-sm btn-info mt-2">Näytä tiedot</a>
         </div>
         {% empty %}
         <div class="alert alert-info">Ei tilauksia tässä tilassa</div>

@@ -129,13 +129,13 @@ MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
 
 
 # settings.py
+# Email settings (development)
 if DEBUG:
-    # For development - print emails to console
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-    DEFAULT_FROM_EMAIL = 'django.core.mail.backends.console.EmailBackend'
-    WAREHOUSE_EMAIL = 'django.core.mail.backends.console.EmailBackend'
+    DEFAULT_FROM_EMAIL = 'noreply@example.com'  # Произвольный email
+    WAREHOUSE_EMAIL = 'warehouse@example.com'   # Произвольный email
 else:
-    # Production settings for Gmail
+    # Production email settings (оставьте ваши реальные настройки для продакшена)
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
     EMAIL_HOST = 'smtp.gmail.com'
     EMAIL_PORT = 587
@@ -143,37 +143,38 @@ else:
     EMAIL_HOST_USER = 'your@gmail.com'
     EMAIL_HOST_PASSWORD = 'your-password-or-app-password'
     DEFAULT_FROM_EMAIL = 'your@gmail.com'
-    WAREHOUSE_EMAIL = 'warehouse@yourdomain.com'  # Your warehouse notification email
+    WAREHOUSE_EMAIL = 'warehouse@yourdomain.com'
 
-    LOGIN_URL = 'login'  # URL name for login page
-    LOGIN_REDIRECT_URL = 'stock_list'  # Where to redirect after login
-    LOGOUT_REDIRECT_URL = 'home'  # Where to redirect after logout
+LOGIN_URL = 'login'  # URL name for login page
+LOGIN_REDIRECT_URL = 'stock_list'  # Where to redirect after login
+LOGOUT_REDIRECT_URL = 'home'  # Where to redirect after logout
 
-    LOGGING = {
+LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        },
+    },
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
         },
     },
     'root': {
         'handlers': ['console'],
-        'level': 'DEBUG',
+        'level': 'INFO',
     },
     'loggers': {
-        'django': {
-            'handlers': ['console'],
-            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
-            'propagate': False,
-        },
-        'stock': {  # Имя вашего приложения
+        'stock': {
             'handlers': ['console'],
             'level': 'DEBUG',
             'propagate': False,
         },
     },
 }
-    
+
 SITE_URL = "http://localhost:8000"
 SITE_NAME = "AJASTON - varastotilausjärjestelmä" 
