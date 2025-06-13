@@ -42,7 +42,9 @@ def item_detail(request, item_id):
             cart_item, created = CartItem.objects.get_or_create(
                 cart=cart,
                 item=item,
-                defaults={'quantity': form.cleaned_data['quantity']}
+                defaults={
+                    'quantity': form.cleaned_data['quantity'],
+                    'comment': form.cleaned_data.get('comment', '')}
             )
             
             if not created:
@@ -70,7 +72,7 @@ def cart_view(request):
     if request.method == 'POST':
         try:
             if not cart.items.exists():
-                messages.error(request, 'Ostoskori on tyhjä. Lisää tuotteita ennen tilauksen lähettämistä.')
+                messages.error(request, 'Tilaukset on tyhjä. Lisää tuotteita ennen tilauksen lähettämistä.')
                 return redirect('cart_view')
             
             # Tilauksen luodaa trancationissa

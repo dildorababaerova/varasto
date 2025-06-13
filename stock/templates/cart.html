@@ -3,7 +3,7 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h1><i class="fas fa-shopping-cart me-2"></i>Ostoskori</h1>
+    <h1><i class="fas fa-shopping-cart me-2"></i>Tilaukset</h1>
     
     {% if cart and cart.items.all %}
     <div class="table-responsive">
@@ -54,7 +54,7 @@
     </div>
     {% else %}
     <div class="alert alert-info">
-        <p class="mb-3">Ostoskori on tyhjä</p>
+        <p class="mb-3">Tilaus on tyhjä</p>
         <a href="{% url 'stock_list' %}" class="btn btn-primary">
             <i class="fas fa-boxes me-1"></i> Selaa tuotteita
         </a>

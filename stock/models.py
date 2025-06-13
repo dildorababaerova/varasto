@@ -12,7 +12,7 @@ class Item(models.Model):
     koodi = models.CharField(max_length=255)
     nimike = models.CharField(max_length=255)
     lisanimike = models.CharField(max_length=255)
-    saldo = models.IntegerField(default=0)
+    # saldo = models.IntegerField(default=0)
 
     def __str__(self):
         return f"{self.koodi} {self.nimike} {self.lisanimike}"
@@ -29,6 +29,7 @@ class CartItem(models.Model):
     cart = models.ForeignKey(Cart, related_name='items', on_delete=models.CASCADE)
     item = models.ForeignKey(Item, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=1)
+    comment = models.TextField(blank=True)
     
     def __str__(self):
         return f"{self.quantity}x {self.item}"

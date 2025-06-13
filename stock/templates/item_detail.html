@@ -43,15 +43,20 @@
                                     <label for="id_quantity" class="form-label">Määrä</label>
                                     {{ form.quantity }}
                                     {% if form.quantity.errors %}
-                                        <div class="invalid-feedback d-block">
-                                            {{ form.quantity.errors }}
-                                        </div>
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.quantity.errors }}
+                                    </div>
                                     {% endif %}
+                                    <div>
+
+                                        <label for="id_comment" class="form-label">Kommmenti</label>
+                                        {{ form.comment }}
+                                    </div>
                                 </div>
                             </div>
                         </div>
                         <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-cart-plus me-2"></i>Lisää ostoskoriin
+                            <i class="fas fa-cart-plus me-2"></i>Lisää tilaukseen
                         </button>
                         <a href="{% url 'stock_list' %}" class="btn btn-secondary">
                             <i class="fas fa-arrow-left me-2"></i>Takaisin listaan
