@@ -8,7 +8,7 @@ from django.utils import timezone
 from django.db import transaction
 import logging
 
-from .models import Item, Cart, CartItem, Order
+from .models import Item, Cart, CartItem, Order, Warehouse
 from .forms import AddToCartForm, OrderCommentForm, OrderStatusForm
 
 
@@ -24,16 +24,21 @@ def home(request):
 
 @login_required
 def stock_list(request):
-    items = Item.objects.all()
+    warehouse = Warehouse.objects.first()
+    items = warehouse.items.filter(
+        warehouseitem__quantity__gt=0
+    ).distinct()
     return render(request, 'stock_list.html', {'items': items})
 
 @login_required
 def item_detail(request, item_id):
     item = get_object_or_404(Item, id=item_id)
+    warehouse = Warehouse.objects.first()
+    available = warehouse.warehouseitem_set.get(item=item).quantity
     
     if request.method == 'POST':
         form = AddToCartForm(request.POST)
-        if form.is_valid():
+        if form.is_valid() and form.cleaned_data['quantity'] <= available:
             cart, created = Cart.objects.get_or_create(
                 user=request.user, 
                 is_ordered=False

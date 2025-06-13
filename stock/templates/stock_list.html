@@ -12,7 +12,7 @@
                     <h5 class="card-title">{{ item.nimike }}</h5>
                     <h6 class="card-subtitle mb-2 text-muted">{{ item.koodi }}</h6>
                     <p class="card-text">{{ item.lisanimike }}</p>
-                    <p class="card-text">Varastosaldo: {{ item.saldo }}</p>
+                    <p class="card-text">Varastosaldo: {{ warehouse_item.quantity }}</p>
                     <a href="{% url 'item_detail' item.id %}" class="btn btn-primary">Tilaa</a>
                 </div>
             </div>

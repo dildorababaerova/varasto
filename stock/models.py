@@ -9,10 +9,25 @@ import logging
 logger = logging.getLogger(__name__)
 
 class Item(models.Model):
-    koodi = models.CharField(max_length=255)
+    koodi = models.CharField(max_length=255, unique=True)
     nimike = models.CharField(max_length=255)
-    lisanimike = models.CharField(max_length=255)
-    # saldo = models.IntegerField(default=0)
+    lisanimike = models.CharField(max_length=255, blank=True)
+    
+    def __str__(self):
+        return f"{self.koodi} {self.nimike}"
+
+class Warehouse(models.Model):
+    name = models.CharField(max_length=100, default="Основной склад")
+    items = models.ManyToManyField(Item, through='WarehouseItem')
+
+class WarehouseItem(models.Model):
+    warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE)
+    item = models.ForeignKey(Item, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=0)
+    last_updated = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('warehouse', 'item')
 
     def __str__(self):
         return f"{self.koodi} {self.nimike} {self.lisanimike}"
@@ -63,6 +78,7 @@ class Order(models.Model):
         try:
             with transaction.atomic():
                 #  Tarkistetaan, että tilaus on valmis käsiteltäväksi
+                warehouse = Warehouse.objects.first()
                 cart_items = (
                     self.cart.items
                     .select_related('item')
@@ -70,19 +86,24 @@ class Order(models.Model):
                 )
 
                 for cart_item in cart_items:
-                    item = cart_item.item
-                    if item.saldo < cart_item.quantity:
+                    warehouse_item = WarehouseItem.objects.select_for_update().get(
+                    warehouse=warehouse,
+                    item=cart_item.item
+                )
+                    if warehouse_item.quantity < cart_item.quantity:
                         raise ValueError(
-                            f" {item.nimike} ({item.koodi}) ei ole riittävästi varastossa. "
-                            f"Varastossa: {item.saldo}, Pyydetty: {cart_item.quantity}"
+                            f" {cart_item.item.nimike} ({cart_item.item.koodi}) ei ole riittävästi varastossa. "
+                            f"Varastossa: {warehouse_item.quantity}, Pyydetty: {cart_item.quantity}"
                         )
                     
-                    item.saldo -= cart_item.quantity
-                    item.save()
+                    warehouse_item.quantity -= cart_item.quantity
+                    warehouse_item.save()
                     logger.info(
-                        f"Varaston saldo päivitetty tuotteelle {item.koodi}: "
-                        f"-{cart_item.quantity}, uusi saldo: {item.saldo}"
+                        f"Varaston saldo päivitetty tuotteelle {cart_item.item.koodi}: "
+                        f"-{cart_item.quantity}, uusi saldo: {warehouse_item.quantity}"
                     )
+        except WarehouseItem.DoesNotExist:
+            raise ValueError(f" Valittu {cart_item.item.nimike} tuote ei ole varastossa.")
         except Exception as e:
             logger.error(f"Virhe tilauksen käsittelyssä: {e}")
             raise
