@@ -6,9 +6,10 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.utils import timezone
 from django.db import transaction
+from django.contrib.admin.views.decorators import staff_member_required
 import logging
 
-from .models import Item, Cart, CartItem, Order, Warehouse
+from .models import Item, Cart, CartItem, Order, Warehouse, WarehouseItem
 from .forms import AddToCartForm, OrderCommentForm, OrderStatusForm
 
 
@@ -25,10 +26,10 @@ def home(request):
 @login_required
 def stock_list(request):
     warehouse = Warehouse.objects.first()
-    items = warehouse.items.filter(
+    available_items = warehouse.items.filter(
         warehouseitem__quantity__gt=0
     ).distinct()
-    return render(request, 'stock_list.html', {'items': items})
+    return render(request, 'stock_list.html', {'items': available_items})
 
 @login_required
 def item_detail(request, item_id):
@@ -214,3 +215,29 @@ def test_email(request):
         return HttpResponse("Email sent successfully!")
     except Exception as e:
         return HttpResponse(f"Failed to send email: {str(e)}")
+    
+
+    # views.py (admin-only)
+@staff_member_required
+def manage_stock(request):
+    if request.method == 'POST':
+        item_id = request.POST.get('item_id')
+        quantity = int(request.POST.get('quantity'))
+        item = get_object_or_404(Item, id=item_id)
+        warehouse = Warehouse.objects.first()  # varaston oletetaan olevan yksi
+        
+        warehouse_item, created = WarehouseItem.objects.get_or_create(
+            warehouse=warehouse,
+            item=item,
+            defaults={'quantity': quantity}
+        )
+        
+        if not created:
+            warehouse_item.quantity += quantity
+            warehouse_item.save()
+        
+        messages.success(request, f"Tuote {item.nimike} uusittu (+{quantity})")
+        return redirect('manage_stock')
+    
+    items = Item.objects.all()
+    return render(request, 'manage_stock.html', {'items': items})
