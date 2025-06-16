@@ -17,8 +17,12 @@ class Item(models.Model):
         return f"{self.koodi} {self.nimike}"
 
 class Warehouse(models.Model):
-    name = models.CharField(max_length=100, default="Основной склад")
+    name = models.CharField(max_length=100, default="Varasto")
     items = models.ManyToManyField(Item, through='WarehouseItem')
+
+    def __str__(self):
+        return f"{self.name} "
+
 
 class WarehouseItem(models.Model):
     warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE)
@@ -30,7 +34,9 @@ class WarehouseItem(models.Model):
         unique_together = ('warehouse', 'item')
 
     def __str__(self):
-        return f"{self.koodi} {self.nimike} {self.lisanimike}"
+        if self.item:
+            return f"{self.item.koodi} {self.item.nimike} - Määrä: {self.quantity}"
+        return f"Varastossa #{self.id} (ei ole tuotetta)"
 
 class Cart(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)

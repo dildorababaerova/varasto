@@ -5,17 +5,21 @@
     <h1>Varastonimikkeet</h1>
     
     <div class="row mt-4">
-        {% for item in items %}
+        {% for wi in warehouse_items %}
         <div class="col-md-4 mb-4">
             <div class="card">
                 <div class="card-body">
-                    <h5 class="card-title">{{ item.nimike }}</h5>
-                    <h6 class="card-subtitle mb-2 text-muted">{{ item.koodi }}</h6>
-                    <p class="card-text">{{ item.lisanimike }}</p>
-                    <p class="card-text">Varastosaldo: {{ warehouse_item.quantity }}</p>
-                    <a href="{% url 'item_detail' item.id %}" class="btn btn-primary">Tilaa</a>
+                    <h5 class="card-title">{{ wi.item.nimike }}</h5>
+                    <h6 class="card-subtitle mb-2 text-muted">{{ wi.item.koodi }}</h6>
+                    <p class="card-text">{{ wi.item.lisanimike }}</p>
+                    <p class="card-text">Varastosaldo: {{ wi.quantity }}</p>
+                    <a href="{% url 'item_detail' wi.item.id %}" class="btn btn-primary">Tilaa</a>
                 </div>
             </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">Varastossa ei ole tuotteita</div>
         </div>
         {% endfor %}
     </div>

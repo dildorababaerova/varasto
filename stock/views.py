@@ -26,20 +26,49 @@ def home(request):
 @login_required
 def stock_list(request):
     warehouse = Warehouse.objects.first()
-    available_items = warehouse.items.filter(
-        warehouseitem__quantity__gt=0
-    ).distinct()
-    return render(request, 'stock_list.html', {'items': available_items})
+    if not warehouse:
+        warehouse = Warehouse.objects.create(name="Varasto")
+        logger.info(f"Created new warehouse: {warehouse}")
 
+    # Get warehouse items with quantities > 0 and their related items
+    warehouse_items = WarehouseItem.objects.filter(
+        warehouse=warehouse,
+        quantity__gt=0
+    ).select_related('item')
+    
+    logger.info(f"Found {warehouse_items.count()} available warehouse items")
+    
+    return render(request, 'stock_list.html', {
+        'warehouse_items': warehouse_items,
+        'warehouse': warehouse
+    })
 @login_required
 def item_detail(request, item_id):
     item = get_object_or_404(Item, id=item_id)
     warehouse = Warehouse.objects.first()
-    available = warehouse.warehouseitem_set.get(item=item).quantity
+    
+    try:
+        warehouse_item = WarehouseItem.objects.get(
+            warehouse=warehouse,
+            item=item
+        )
+        available = warehouse_item.quantity
+    except WarehouseItem.DoesNotExist:
+        warehouse_item = None
+        available = 0
+        messages.warning(request, "Tätä tuotetta ei ole varastossa")
     
     if request.method == 'POST':
         form = AddToCartForm(request.POST)
-        if form.is_valid() and form.cleaned_data['quantity'] <= available:
+        if form.is_valid():
+            if available <= 0:
+                messages.error(request, "Tuote ei ole varastossa")
+                return redirect('stock_list')
+            if form.cleaned_data['quantity'] > available:
+                messages.error(request, 
+                    f"Pyytämäsi määrä ({form.cleaned_data['quantity']}) ylittää varastosaldon ({available})")
+                return redirect('item_detail', item_id=item.id)
+            
             cart, created = Cart.objects.get_or_create(
                 user=request.user, 
                 is_ordered=False
@@ -50,7 +79,8 @@ def item_detail(request, item_id):
                 item=item,
                 defaults={
                     'quantity': form.cleaned_data['quantity'],
-                    'comment': form.cleaned_data.get('comment', '')}
+                    'comment': form.cleaned_data.get('comment', '')
+                }
             )
             
             if not created:
@@ -65,6 +95,8 @@ def item_detail(request, item_id):
     return render(request, 'item_detail.html', {
         'item': item,
         'form': form,
+        'warehouse_item': warehouse_item,
+        'available': available
     })
 
 @login_required

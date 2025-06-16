@@ -24,7 +24,12 @@
                                     <strong>Lisänimike:</strong> {{ item.lisanimike }}
                                 </li>
                                 <li class="list-group-item">
-                                    <strong>Varastosaldo:</strong> {{ warehouse_item.quantity }}
+                                    <strong>Varastosaldo:</strong> 
+                                    {% if warehouse_item %}
+                                        {{ warehouse_item.quantity }}
+                                    {% else %}
+                                        0 (ei varastossa)
+                                    {% endif %}
                                 </li>
                             </ul>
                         </div>
@@ -48,15 +53,19 @@
                                     </div>
                                     {% endif %}
                                     <div>
-
-                                        <label for="id_comment" class="form-label">Kommmenti</label>
+                                        <label for="id_comment" class="form-label">Kommentti</label>
                                         {{ form.comment }}
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-cart-plus me-2"></i>Lisää tilaukseen
+                        <button type="submit" class="btn btn-primary" {% if not warehouse_item %}disabled{% endif %}>
+                            <i class="fas fa-cart-plus me-2"></i>
+                            {% if warehouse_item %}
+                                Lisää tilaukseen
+                            {% else %}
+                                Ei saatavilla
+                            {% endif %}
                         </button>
                         <a href="{% url 'stock_list' %}" class="btn btn-secondary">
                             <i class="fas fa-arrow-left me-2"></i>Takaisin listaan
