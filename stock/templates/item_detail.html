@@ -4,9 +4,9 @@
 
 {% block content %}
 <div class="container mt-4">
-    <div class="row">
-        <div class="col-md-8">
-            <div class="card">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-sm">
                 <div class="card-header bg-primary text-white">
                     <h3 class="mb-0">
                         <i class="fas fa-box me-2"></i>{{ item.nimike }}
@@ -14,66 +14,112 @@
                 </div>
                 <div class="card-body">
                     <div class="row mb-4">
-                        <div class="col-md-6">
-                            <h5>Tiedot</h5>
-                            <ul class="list-group list-group-flush">
-                                <li class="list-group-item">
-                                    <strong>Koodi:</strong> {{ item.koodi }}
-                                </li>
-                                <li class="list-group-item">
-                                    <strong>Lisänimike:</strong> {{ item.lisanimike }}
-                                </li>
-                                <li class="list-group-item">
-                                    <strong>Varastosaldo:</strong> 
-                                    {% if warehouse_item %}
-                                        {{ warehouse_item.quantity }}
-                                    {% else %}
-                                        0 (ei varastossa)
-                                    {% endif %}
-                                </li>
-                            </ul>
-                        </div>
-                        <div class="col-md-6">
-                            <img src="https://via.placeholder.com/300x200?text=Tuotekuva" 
-                                 alt="{{ item.nimike }}" 
-                                 class="img-fluid rounded">
-                        </div>
-                    </div>
-
-                    <form method="post">
-                        {% csrf_token %}
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="id_quantity" class="form-label">Määrä</label>
-                                    {{ form.quantity }}
-                                    {% if form.quantity.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {{ form.quantity.errors }}
-                                    </div>
-                                    {% endif %}
-                                    <div>
-                                        <label for="id_comment" class="form-label">Kommentti</label>
-                                        {{ form.comment }}
-                                    </div>
-                                </div>
+                        <!-- Item Image -->
+                        <div class="col-md-5 mb-3 mb-md-0">
+                            <div class="ratio ratio-4x3 bg-light rounded d-flex align-items-center justify-content-center">
+                                <img src="https://via.placeholder.com/400x300?text=Tuotekuva" 
+                                     alt="{{ item.nimike }}" 
+                                     class="img-fluid p-3">
                             </div>
                         </div>
-                        <button type="submit" class="btn btn-primary" {% if not warehouse_item %}disabled{% endif %}>
-                            <i class="fas fa-cart-plus me-2"></i>
-                            {% if warehouse_item %}
-                                Lisää tilaukseen
-                            {% else %}
-                                Ei saatavilla
-                            {% endif %}
-                        </button>
-                        <a href="{% url 'stock_list' %}" class="btn btn-secondary">
-                            <i class="fas fa-arrow-left me-2"></i>Takaisin listaan
-                        </a>
-                    </form>
+                        
+                        <!-- Item Details -->
+                        <div class="col-md-7">
+                            <div class="table-responsive">
+                                <table class="table table-borderless table-sm">
+                                    <tbody>
+                                        <tr>
+                                            <th class="w-25 ps-0">Koodi:</th>
+                                            <td>{{ item.koodi }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th class="w-25 ps-0">Lisänimike:</th>
+                                            <td>{{ item.lisanimike }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th class="w-25 ps-0">Varastosaldo:</th>
+                                            <td>
+                                                {% if warehouse_item %}
+                                                    <span class="badge bg-{% if warehouse_item.quantity > 10 %}success{% elif warehouse_item.quantity > 0 %}warning{% else %}danger{% endif %}">
+                                                        {{ warehouse_item.quantity }}
+                                                    </span>
+                                                {% else %}
+                                                    <span class="badge bg-danger">0 (ei varastossa)</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <!-- Order Form -->
+                            <form method="post" class="mt-4">
+                                {% csrf_token %}
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="id_quantity" class="form-label">Määrä</label>
+                                            <input type="number" 
+                                                   class="form-control" 
+                                                   id="id_quantity" 
+                                                   name="quantity"
+                                                   placeholder="Määrä"
+                                                   {% if form.quantity.value %}value="{{ form.quantity.value }}"{% endif %}>
+                                            {% if form.quantity.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.quantity.errors }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label for="id_comment" class="form-label">Kommentti</label>
+                                            <textarea class="form-control" 
+                                                      id="id_comment" 
+                                                      name="comment"
+                                                      placeholder="Kommentti (valinnainen)"
+                                                      rows="1">{% if form.comment.value %}{{ form.comment.value }}{% endif %}</textarea>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-12">
+                                        <div class="d-flex gap-2">
+                                            <button type="submit" class="btn btn-primary px-4" {% if not warehouse_item %}disabled{% endif %}>
+                                                <i class="fas fa-cart-plus me-2"></i>
+                                                {% if warehouse_item %}
+                                                    Lisää tilaukseen
+                                                {% else %}
+                                                    Ei saatavilla
+                                                {% endif %}
+                                            </button>
+                                            <a href="{% url 'stock_list' %}" class="btn btn-outline-secondary px-4">
+                                                <i class="fas fa-arrow-left me-2"></i> Takaisin
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+    .form-control {
+        padding: 0.5rem 1rem;
+        height: calc(3rem + 2px);
+    }
+    textarea.form-control {
+        min-height: calc(3rem + 2px);
+    }
+    .form-label {
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+</style>
 {% endblock %}

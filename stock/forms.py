@@ -1,5 +1,5 @@
 from django import forms
-from .models import CartItem, Order
+from .models import CartItem, Order,Item
 
 class AddToCartForm(forms.ModelForm):
     quantity = forms.IntegerField(min_value=1, label="Määrä")
@@ -33,3 +33,25 @@ class OrderStatusForm(forms.ModelForm):
             'status': 'Tila',
             'comment': 'Päivitys',
         }
+
+class ItemForm(forms.ModelForm):
+    class Meta:
+        model = Item
+        fields = ['koodi', 'nimike' ]
+        widgets = {
+            'koodi': forms.TextInput(attrs={'class': 'form-control'}),
+            'nimike': forms.TextInput(attrs={'class': 'form-control'}),
+            
+        }
+        labels = {
+            'koodi': 'Tuotekoodi',
+            'nimike': 'Nimike',
+            
+        }
+
+class QuantityForm(forms.Form):
+    quantity = forms.IntegerField(
+        min_value=0,
+        widget=forms.NumberInput(attrs={'class': 'form-control'}),
+        label='Määrä varastossa'
+    )

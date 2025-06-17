@@ -20,6 +20,11 @@
         .navbar-custom {
             background-color:rgb(9, 56, 126) !important;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            font-size:20px;
+        }
+        
+        .container a:hover {
+            color: #ffffff !important;
         }
         .bg-primary-custom {
             background-color: #0d6efd !important;
@@ -34,14 +39,14 @@
             transition: color 0.3s;
         }
         .footer-links a:hover {
-            color: #fff;
+            color: #ffffff;
         }
     </style>
 </head>
 <body>
     <!-- Navigation -->
-    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
-        <div class="container">
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom" >
+        <div class="container" >
             <a class="navbar-brand" href="{% url 'home' %}">
                 <i class="fas fa-warehouse me-2"></i>Etusivu
             </a>

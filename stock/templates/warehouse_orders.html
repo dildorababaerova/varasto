@@ -11,18 +11,7 @@
                 Odottavat
             </a>
         </li>
-        <li class="nav-item">
-            <a class="nav-link {% if current_status == 'processing' %}active{% endif %}" 
-               href="{% url 'warehouse_orders' %}?status=processing">
-                Käsittelyssä
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link {% if current_status == 'completed' %}active{% endif %}" 
-               href="{% url 'warehouse_orders' %}?status=completed">
-                Valmiit
-            </a>
-        </li>
+        
         <li class="nav-item">
             <a class="nav-link {% if current_status == 'delivered' %}active{% endif %}" 
                href="{% url 'warehouse_orders' %}?status=delivered">
@@ -36,7 +25,7 @@
         <div class="list-group-item">
             <div class="d-flex justify-content-between">
                 <h5>Tilaus #{{ order.id }} - {{ order.user.username }}</h5>
-                <span class="badge bg-primary">{{ order.get_status_display }}</span>
+                <!--<span class="badge bg-primary">{{ order.get_status_display }}</span>-->
             </div>
             <p>Luotu: {{ order.created_at|date:"d.m.Y H:i" }}</p>
             

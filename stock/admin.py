@@ -8,6 +8,7 @@ admin.site.register(Warehouse)
 @admin.register(Item)
 class ItemAdmin(admin.ModelAdmin):
     list_display = ('koodi', 'nimike', 'lisanimike')
+    search_fields = ('koodi', 'nimike')
 
 
 @admin.register(WarehouseItem)

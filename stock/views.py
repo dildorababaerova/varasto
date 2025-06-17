@@ -7,10 +7,11 @@ from django.conf import settings
 from django.utils import timezone
 from django.db import transaction
 from django.contrib.admin.views.decorators import staff_member_required
+from django.core.paginator import Paginator
 import logging
 
 from .models import Item, Cart, CartItem, Order, Warehouse, WarehouseItem
-from .forms import AddToCartForm, OrderCommentForm, OrderStatusForm
+from .forms import AddToCartForm, OrderCommentForm, OrderStatusForm, ItemForm, QuantityForm
 
 
 logger = logging.getLogger(__name__)
@@ -254,22 +255,87 @@ def test_email(request):
 def manage_stock(request):
     if request.method == 'POST':
         item_id = request.POST.get('item_id')
-        quantity = int(request.POST.get('quantity'))
-        item = get_object_or_404(Item, id=item_id)
-        warehouse = Warehouse.objects.first()  # varaston oletetaan olevan yksi
+        quantity = int(request.POST.get('quantity', 0))
         
-        warehouse_item, created = WarehouseItem.objects.get_or_create(
-            warehouse=warehouse,
-            item=item,
-            defaults={'quantity': quantity}
-        )
+        if not item_id or quantity <= 0:
+            messages.error(request, "Virheelliset tiedot")
+            return redirect('manage_stock')
         
-        if not created:
-            warehouse_item.quantity += quantity
-            warehouse_item.save()
+        try:
+            item = Item.objects.get(id=item_id)
+            warehouse = Warehouse.objects.first()  # Assuming single warehouse
+            
+            warehouse_item, created = WarehouseItem.objects.get_or_create(
+                warehouse=warehouse,
+                item=item,
+                defaults={'quantity': quantity}
+            )
+            
+            if not created:
+                warehouse_item.quantity += quantity
+                warehouse_item.save()
+            
+            messages.success(request, f"Tuote {item.nimike} päivitetty (+{quantity})")
+            return redirect('manage_stock')
         
-        messages.success(request, f"Tuote {item.nimike} uusittu (+{quantity})")
-        return redirect('manage_stock')
+        except Exception as e:
+            messages.error(request, f"Virhe: {str(e)}")
+            return redirect('manage_stock')
     
-    items = Item.objects.all()
-    return render(request, 'manage_stock.html', {'items': items})
+    # Get all items for dropdown
+    items = Item.objects.all().order_by('nimike')
+    
+    # Get warehouse items with pagination
+    warehouse = Warehouse.objects.first()
+    warehouse_items_list = WarehouseItem.objects.filter(warehouse=warehouse).select_related('item').order_by('item__nimike')
+    
+    paginator = Paginator(warehouse_items_list, 25)  # Show 25 items per page
+    page_number = request.GET.get('page')
+    warehouse_items = paginator.get_page(page_number)
+    
+    return render(request, 'manage_stock.html', {
+        'items': items,
+        'warehouse_items': warehouse_items
+    })
+
+
+@staff_member_required
+def add_item(request, item_id=None):
+    # If item_id is provided, we're editing an existing item
+    if item_id:
+        item = get_object_or_404(Item, id=item_id)
+        warehouse_item = get_object_or_404(WarehouseItem, item=item)
+    else:
+        item = None
+        warehouse_item = None
+
+    if request.method == 'POST':
+        form = ItemForm(request.POST, instance=item)
+        quantity_form = QuantityForm(request.POST)
+        
+        if form.is_valid() and quantity_form.is_valid():
+            # Save the item
+            new_item = form.save()
+            
+            # Get or create warehouse item
+            warehouse_item, created = WarehouseItem.objects.get_or_create(
+                warehouse=Warehouse.objects.first(),
+                item=new_item,
+                defaults={'quantity': quantity_form.cleaned_data['quantity']}
+            )
+            
+            if not created:
+                warehouse_item.quantity = quantity_form.cleaned_data['quantity']
+                warehouse_item.save()
+            
+            return redirect('manage_stock')
+    else:
+        form = ItemForm(instance=item)
+        initial_quantity = warehouse_item.quantity if warehouse_item else 0
+        quantity_form = QuantityForm(initial={'quantity': initial_quantity})
+    
+    return render(request, 'add_item.html', {
+        'form': form,
+        'quantity_form': quantity_form,
+        'is_edit': item_id is not None
+    })
