@@ -1,12 +1,30 @@
 {% extends "base.html" %}
-
+{% block extra_css %}
+{% endblock %}
+ <style>
+    .nav-link-custom:hover {
+        color: #1a0fdd !important;
+    }
+    
+    /* Active tab styling */
+    .nav-tabs .nav-link.active {
+        font-weight: bold;
+        border-bottom: 3px solid #1a0fdd;
+    }
+    
+    /* Hover effect for all tabs */
+    .nav-tabs .nav-link:hover:not(.active) {
+        color: #1a0fdd;
+        background-color: #f8f9fa;
+    }
+</style>   
 {% block content %}
 <div class="container mt-4">
     <h1>Varaston tilaukset</h1>
     
     <ul class="nav nav-tabs mb-4">
         <li class="nav-item">
-            <a class="nav-link {% if current_status == 'pending' %}active{% endif %}" 
+            <a class="nav-link {% if current_status == 'pending' %}active{% endif %} nav-link-custom " 
                href="{% url 'warehouse_orders' %}?status=pending">
                 Odottavat
             </a>
