@@ -12,7 +12,6 @@
                 <tr>
                     <th>Koodi</th>
                     <th>Nimike</th>
-                    <th>Lisanimike</th>
                     <th>Määrä</th>
                     <th>Toiminnot</th>
                 </tr>
@@ -22,7 +21,6 @@
                 <tr>
                     <td>{{ item.item.koodi }}</td>
                     <td>{{ item.item.nimike }}</td>
-                    <td>{{ item.item.lisanimike }}</td>
                     <td>
                         <div class="input-group" style="max-width: 120px;">
                             <a href="{% url 'decrease_item' item.id %}" class="btn btn-outline-secondary">-</a>

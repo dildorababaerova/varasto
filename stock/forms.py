@@ -2,6 +2,7 @@ from django import forms
 from .models import CartItem, Order,Item
 
 class AddToCartForm(forms.ModelForm):
+    
     quantity = forms.IntegerField(min_value=1, label="Määrä")
     comment = forms.CharField(
         required=False,
@@ -55,3 +56,4 @@ class QuantityForm(forms.Form):
         widget=forms.NumberInput(attrs={'class': 'form-control'}),
         label='Määrä varastossa'
     )
+

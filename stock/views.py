@@ -62,12 +62,20 @@ def item_detail(request, item_id):
     if request.method == 'POST':
         form = AddToCartForm(request.POST)
         if form.is_valid():
+            quantity = form.cleaned_data['quantity']
+            
+            # Добавляем проверку на положительное количество
+            if quantity <= 0:
+                messages.error(request, "Määrän tulee olla suurempi kuin nolla")
+                return redirect('item_detail', item_id=item.id)
+                
             if available <= 0:
                 messages.error(request, "Tuote ei ole varastossa")
                 return redirect('stock_list')
-            if form.cleaned_data['quantity'] > available:
+                
+            if quantity > available:
                 messages.error(request, 
-                    f"Pyytämäsi määrä ({form.cleaned_data['quantity']}) ylittää varastosaldon ({available})")
+                    f"Pyytämäsi määrä ({quantity}) ylittää varastosaldon ({available})")
                 return redirect('item_detail', item_id=item.id)
             
             cart, created = Cart.objects.get_or_create(
@@ -79,13 +87,13 @@ def item_detail(request, item_id):
                 cart=cart,
                 item=item,
                 defaults={
-                    'quantity': form.cleaned_data['quantity'],
+                    'quantity': quantity,
                     'comment': form.cleaned_data.get('comment', '')
                 }
             )
             
             if not created:
-                cart_item.quantity += form.cleaned_data['quantity']
+                cart_item.quantity += quantity
                 cart_item.save()
             
             messages.success(request, f"{item.nimike} lisätty ostoskoriin")

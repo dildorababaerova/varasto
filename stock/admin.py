@@ -7,7 +7,7 @@ admin.site.register(Warehouse)
 # Register your models here.
 @admin.register(Item)
 class ItemAdmin(admin.ModelAdmin):
-    list_display = ('koodi', 'nimike', 'lisanimike')
+    list_display = ('koodi', 'nimike')
     search_fields = ('koodi', 'nimike')
 
 
