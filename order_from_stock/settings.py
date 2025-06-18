@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 import os
 from pathlib import Path
+from dotenv import load_dotenv
+load_dotenv()
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -78,8 +80,12 @@ WSGI_APPLICATION = 'order_from_stock.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.postgresql'),
+        'NAME': os.getenv('DB_NAME'),
+        'USER': os.getenv('DB_USER'),
+        'PASSWORD': os.getenv('DB_PASSWORD'),   
+        'HOST': os.getenv('DB_HOST'),
+        'PORT': os.getenv('DB_PORT'),  # Default PostgreSQL port  
     }
 }
 
@@ -136,14 +142,26 @@ if DEBUG:
     WAREHOUSE_EMAIL = 'warehouse@example.com'   # Произвольный email
 else:
     # Production email settings (оставьте ваши реальные настройки для продакшена)
-    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    EMAIL_HOST = 'smtp.gmail.com'
-    EMAIL_PORT = 587
-    EMAIL_USE_TLS = True
-    EMAIL_HOST_USER = 'your@gmail.com'
-    EMAIL_HOST_PASSWORD = 'your-password-or-app-password'
-    DEFAULT_FROM_EMAIL = 'your@gmail.com'
-    WAREHOUSE_EMAIL = 'warehouse@yourdomain.com'
+    # EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    # EMAIL_HOST = 'smtp.gmail.com'
+    # EMAIL_PORT = 587
+    # EMAIL_USE_TLS = True
+    # EMAIL_HOST_USER = 'your@gmail.com'
+    # EMAIL_HOST_PASSWORD = 'your-password-or-app-password'
+    # DEFAULT_FROM_EMAIL = 'your@gmail.com'
+    # WAREHOUSE_EMAIL = 'warehouse@yourdomain.com'
+
+
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # For development
+    EMAIL_HOST = os.getenv('EMAIL_HOST')
+    EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
+    EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
+    EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+    EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+    DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL')
+    EMAIL_SUBJECT_PREFIX = os.getenv('EMAIL_SUBJECT_PREFIX', '[RJ] ')
+
+    ADMIN_EMAIL = os.getenv('ADMINS')    
 
 LOGIN_URL = 'login'  # URL name for login page
 LOGIN_REDIRECT_URL = 'stock_list'  # Where to redirect after login
