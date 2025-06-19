@@ -88,6 +88,7 @@
                     <th>Määrä</th>
                     <th>Tuote</th>
                     <th>Koodi</th>
+                    <th>Komentti</th>
                 </tr>
             </thead>
             <tbody>
@@ -96,6 +97,7 @@
                     <td>{{ item.quantity }} kpl</td>
                     <td>{{ item.item.nimike }}</td>
                     <td>{{ item.item.koodi }}</td>
+                    <td>{{ item.comment }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
