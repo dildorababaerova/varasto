@@ -9,8 +9,16 @@ import logging
 logger = logging.getLogger(__name__)
 
 class Item(models.Model):
+    CATEGORY_CHOICES = [
+        ('integraalit', 'Integraalit'),
+        ('elastomeerit', 'Elastomeerit'),
+        ('kovat', 'Kovat'),
+
+ ]
+    
     koodi = models.CharField(max_length=255, unique=True)
     nimike = models.CharField(max_length=255)
+    category = models.CharField(max_length=100, choices=CATEGORY_CHOICES, default='integraalit')
     
     class Meta:
         managed = True
@@ -48,18 +56,43 @@ class Cart(models.Model):
     def __str__(self):
         return f"Cart #{self.id} - {self.user.username}"
 
+class Workstation(models.Model):
+    name_workstation = models.CharField(max_length=255, unique=True, default="")
+
+    class Meta:
+        managed = True
+        
+    def __str__(self):
+        return f"{self.name_workstation}"
+    
+class Color(models.Model):
+    color = models.CharField(max_length=255, unique=True,  default="")
+
+    class Meta:
+        managed = True
+        
+    def __str__(self):
+        return f"{self.color}"
+
 class CartItem(models.Model):
     cart = models.ForeignKey(Cart, related_name='items', on_delete=models.CASCADE)
     item = models.ForeignKey(Item, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=1)
     comment = models.TextField(blank=True)
+    workstation = models.ForeignKey(Workstation, on_delete=models.SET_NULL, null=True, blank=True)
+    color = models.ForeignKey(Color, on_delete=models.SET_NULL, null=True, blank=True)
     
     def __str__(self):
-        return f"{self.quantity}x {self.item}"
-
+        desc = f"{self.quantity}x {self.item}"
+        if self.workstation:
+            desc += f" ({self.workstation})"
+        if self.color:
+            desc += f" [{self.color}]"
+        return desc
 class Order(models.Model):
     STATUS_CHOICES = [
         ('pending', 'Odottaa'),
+        ('processing', 'Käsitelyssä'),
         ('delivered', 'Toimitettu'),
     ]
     
@@ -192,3 +225,7 @@ class Order(models.Model):
             logger.info(f"New order notification sent for order #{self.id}")
         except Exception as e:
             logger.error(f"Error sending new order notification: {e}")
+
+
+
+    

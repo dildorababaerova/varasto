@@ -10,18 +10,18 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.core.paginator import Paginator
 import logging
 
-from .models import Item, Cart, CartItem, Order, Warehouse, WarehouseItem
-from .forms import AddToCartForm, OrderCommentForm, OrderStatusForm, ItemForm, QuantityForm
+from .models import Item, Cart, CartItem, Order, Warehouse, WarehouseItem, Workstation, Color
+from .forms import AddToCartForm, CustomUserCreationForm, OrderCommentForm, OrderStatusForm, ItemForm, QuantityForm
 
 
 logger = logging.getLogger(__name__)
 
 
 def home(request):
-    logger.debug("Это DEBUG сообщение")
-    logger.info("Это INFO сообщение")
-    logger.warning("Это WARNING сообщение")
-    logger.error("Это ERROR сообщение")
+    # logger.debug("Это DEBUG сообщение")
+    # logger.info("Это INFO сообщение")
+    # logger.warning("Это WARNING сообщение")
+    # logger.error("Это ERROR сообщение")
     return render(request, 'main.html')
 
 @login_required
@@ -31,21 +31,34 @@ def stock_list(request):
         warehouse = Warehouse.objects.create(name="Varasto")
         logger.info(f"Created new warehouse: {warehouse}")
 
-    # Get warehouse items with quantities > 0 and their related items
+    # Get selected category from request
+    selected_category = request.GET.get('category')
+    
+    # Get warehouse items with quantities > 0
     warehouse_items = WarehouseItem.objects.filter(
         warehouse=warehouse,
         quantity__gt=0
     ).select_related('item')
     
+    # Filter by category if selected
+    if selected_category:
+        warehouse_items = warehouse_items.filter(item__category=selected_category)
+    
     logger.info(f"Found {warehouse_items.count()} available warehouse items")
     
     return render(request, 'stock_list.html', {
         'warehouse_items': warehouse_items,
-        'warehouse': warehouse
+        'warehouse': warehouse,
+        'categories': Item.CATEGORY_CHOICES,
+        'selected_category': selected_category
     })
+
+
 @login_required
 def item_detail(request, item_id):
     item = get_object_or_404(Item, id=item_id)
+    workstations = Workstation.objects.all()  # Get all workstations
+    colors = Color.objects.all()  # Get all colors
     warehouse = Warehouse.objects.first()
     
     try:
@@ -64,7 +77,6 @@ def item_detail(request, item_id):
         if form.is_valid():
             quantity = form.cleaned_data['quantity']
             
-            # Добавляем проверку на положительное количество
             if quantity <= 0:
                 messages.error(request, "Määrän tulee olla suurempi kuin nolla")
                 return redirect('item_detail', item_id=item.id)
@@ -83,20 +95,35 @@ def item_detail(request, item_id):
                 is_ordered=False
             )
             
+            # Get selected workstation and color from form
+            workstation_id = request.POST.get('workstation')
+            color_id = request.POST.get('color')
+            
+            try:
+                workstation = Workstation.objects.get(id=workstation_id) if workstation_id else None
+                color = Color.objects.get(id=color_id) if color_id else None
+            except (Workstation.DoesNotExist, Color.DoesNotExist):
+                messages.error(request, "Virheellinen työpiste tai väri")
+                return redirect('item_detail', item_id=item.id)
+            
             cart_item, created = CartItem.objects.get_or_create(
                 cart=cart,
                 item=item,
                 defaults={
                     'quantity': quantity,
-                    'comment': form.cleaned_data.get('comment', '')
+                    'comment': form.cleaned_data.get('comment', ''),
+                    'workstation': workstation,
+                    'color': color
                 }
             )
             
             if not created:
                 cart_item.quantity += quantity
+                cart_item.workstation = workstation
+                cart_item.color = color
                 cart_item.save()
             
-            messages.success(request, f"{item.nimike} lisätty ostoskoriin")
+            messages.success(request, f"{item.nimike} lisätty tilaukseen")
             return redirect('cart_view')
     else:
         form = AddToCartForm()
@@ -105,8 +132,11 @@ def item_detail(request, item_id):
         'item': item,
         'form': form,
         'warehouse_item': warehouse_item,
-        'available': available
+        'available': available,
+        'workstations': workstations,
+        'colors': colors,
     })
+
 
 @login_required
 def cart_view(request):
@@ -137,7 +167,6 @@ def cart_view(request):
                 order.process_order()
             
             order.send_new_order_notification()
-            # logger.info(f"Order #{order.id} created, notifications sent.")
             
             messages.success(request, 'Tilaus onnistui! Tilauksen tiedot on lähetetty sähköpostiisi.')
             return redirect('order_detail', order_id=order.id)
@@ -147,7 +176,13 @@ def cart_view(request):
             messages.error(request, f'Virhe tilauksessa: {e}')
             return redirect('cart_view')
     
-    return render(request, 'cart.html', {'cart': cart})
+    # Add prefetch_related to optimize queries
+    cart_items = cart.items.select_related('item', 'workstation', 'color').all()
+    return render(request, 'cart.html', {
+        'cart': cart,
+        'cart_items': cart_items
+    })
+
 
 def increase_item(request, item_id):
     cart_item = get_object_or_404(CartItem, id=item_id, cart__user=request.user)
@@ -347,3 +382,14 @@ def add_item(request, item_id=None):
         'quantity_form': quantity_form,
         'is_edit': item_id is not None
     })
+
+def signup(request):
+    if request.method == 'POST':
+        form = CustomUserCreationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('stock_list')
+    else:
+        form = CustomUserCreationForm()
+
+    return render(request, 'registration/signup.html', {'form': form})
