@@ -11,7 +11,11 @@ from django.core.paginator import Paginator
 import logging
 
 from .models import Item, Cart, CartItem, Order, Warehouse, WarehouseItem, Workstation, Color
-from .forms import AddToCartForm, CustomUserCreationForm, OrderCommentForm, OrderStatusForm, ItemForm, QuantityForm
+from .forms import AddToCartForm, CustomUserCreationForm, OrderCommentForm, OrderStatusForm, ItemForm, QuantityForm, WarehouseStaffRegistrationForm
+
+from django.core.exceptions import PermissionDenied
+from django.contrib.auth.decorators import user_passes_test
+
 
 
 logger = logging.getLogger(__name__)
@@ -245,10 +249,22 @@ def order_detail(request, order_id):
         'form': form
     })
 
+
+def is_warehouse_staff(user):
+    """Check if user is warehouse staff (has permission but not full admin)"""
+    return user.is_authenticated and (user.is_staff or user.groups.filter(name='Warehouse Staff').exists())
+
+def warehouse_staff_required(view_func):
+    def test_func(user):
+        return is_warehouse_staff(user)
+    return user_passes_test(test_func)(view_func)
+
+
 @login_required
+@user_passes_test(is_warehouse_staff)
 def warehouse_orders(request):
-    if not request.user.is_staff:
-        return redirect('stock_list')
+    if not is_warehouse_staff(request.user):
+        raise PermissionDenied
     
     status = request.GET.get('status', 'pending')
     orders = Order.objects.filter(status=status).order_by('created_at')
@@ -393,3 +409,17 @@ def signup(request):
         form = CustomUserCreationForm()
 
     return render(request, 'registration/signup.html', {'form': form})
+
+
+def register_warehouse_staff(request):
+    if request.method == 'POST':
+        form = WarehouseStaffRegistrationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('login')  # Перенаправляем на страницу входа
+    else:
+        form = WarehouseStaffRegistrationForm()
+    return render(request, 'registration/register_warehouse_staff.html', {'form': form})
+
+
+

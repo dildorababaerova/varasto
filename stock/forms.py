@@ -5,6 +5,10 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
 from django.utils.translation import gettext_lazy as _
 
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth.models import Group
+
+
 class AddToCartForm(forms.ModelForm):
     
     quantity = forms.IntegerField(min_value=1, label="Määrä")
@@ -113,3 +117,18 @@ class CustomUserCreationForm(UserCreationForm):
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
         }
 
+
+
+class WarehouseStaffRegistrationForm(UserCreationForm):
+    class Meta:
+        model = User
+        fields = ['username', 'password1', 'password2']
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        if commit:
+            user.save()
+            # Добавляем пользователя в группу Warehouse Staff
+            warehouse_staff_group = Group.objects.get(name='Warehouse Staff')
+            user.groups.add(warehouse_staff_group)
+        return user

@@ -67,6 +67,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'stock.views.cart_context',
+                'stock.context_processors.user_groups',
             ],
         },
     },
@@ -195,4 +196,9 @@ LOGGING = {
 }
 
 SITE_URL = "http://localhost:8000"
-SITE_NAME = "AJASTON - varastotilausjärjestelmä" 
+SITE_NAME = "AJASTON - varastotilausjärjestelmä"
+
+# In settings.py
+AUTHENTICATION_BACKENDS = [
+     'django.contrib.auth.backends.ModelBackend', 
+]
