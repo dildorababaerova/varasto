@@ -55,29 +55,43 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
-                    {% if user.is_staff %}
+                    {% if user.is_staff and user.is_superuser %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'warehouse_orders' %}">
+                            <i class="fas fa-truck me-1"></i> Varaston tilaukset
+                        </a>
+                    </li>
+                    
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'manage_stock' %}">
                             <i class="fas fa-boxes me-1"></i> Varastojärjestelmä
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'admin:index' %}">
+                            <i class="fas fa-cog me-1"></i> Admin
+                        </a>
+                    </li>
                     {% endif %}
+
+                    {% if user.is_warehouse_staff %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'warehouse_orders' %}">
+                            <i class="fas fa-truck me-1"></i> Varaston tilaukset
+                        </a>
+                    </li>
+                    {% endif %}
+                    
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'stock_list' %}">
                             <i class="fas fa-boxes me-1"></i> Nimikkeet
                         </a>
                     </li>
+                    
                     {% if user.is_authenticated %}
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'order_list' %}">
                             <i class="fas fa-clipboard-list me-1"></i> Omat tilaukset
-                        </a>
-                    </li>
-                    {% endif %}
-                    {% if user.is_staff %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'warehouse_orders' %}">
-                            <i class="fas fa-truck me-1"></i> Varaston tilaukset
                         </a>
                     </li>
                     {% endif %}
@@ -135,6 +149,14 @@
             <div class="row align-items-center">
                 <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
                     <p class="mb-0 text-secondary">&copy; 2025 Varastojärjestelmä. Kaikki oikeudet pidätetään.</p>
+                    <!-- Добавьте кнопку регистрации здесь -->
+                    {% if not user.is_authenticated %}
+                    <div class="mt-2">
+                        <a href="{% url 'register_warehouse_staff' %}" class="btn btn-sm btn-outline-light">
+                            <i class="fas fa-user-plus me-1"></i> Rekisteröi varastotyöntekijä
+                        </a>
+                    </div>
+                    {% endif %}
                 </div>
                 <div class="col-md-6 text-center text-md-end footer-links">
                     <a href="#" class="me-3">Käyttöehdot</a>

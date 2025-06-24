@@ -64,8 +64,13 @@
         .footer {
             margin-top: 30px;
             font-size: 14px;
-            color: #f5f1f1;
+            color: #777;
             text-align: center;
+        }
+        .highlight {
+            background-color: #e3f2fd;
+            padding: 2px 5px;
+            border-radius: 3px;
         }
     </style>
 </head>
@@ -88,7 +93,9 @@
                     <th>Määrä</th>
                     <th>Tuote</th>
                     <th>Koodi</th>
-                    <th>Komentti</th>
+                    <th>Työpiste</th>
+                    <th>Väri</th>
+                    <th>Kommentti</th>
                 </tr>
             </thead>
             <tbody>
@@ -97,7 +104,21 @@
                     <td>{{ item.quantity }} kpl</td>
                     <td>{{ item.item.nimike }}</td>
                     <td>{{ item.item.koodi }}</td>
-                    <td>{{ item.comment }}</td>
+                    <td>
+                        {% if item.workstation %}
+                            <span class="highlight">{{ item.workstation.name_workstation }}</span>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if item.color %}
+                            <span class="highlight">{{ item.color.color }}</span>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>{{ item.comment|default:"-" }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -105,7 +126,7 @@
         
         {% if order.comment %}
         <div class="comment-box">
-            <h3 style="margin-top:0;">Asiakkaan kommentti:</h3>
+            <h3 style="margin-top:0;">Asiakkaan yleinen kommentti:</h3>
             <p style="white-space: pre-line;">{{ order.comment }}</p>
         </div>
         {% endif %}

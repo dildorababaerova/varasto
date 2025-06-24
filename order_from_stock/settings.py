@@ -70,6 +70,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'stock.views.cart_context',
+                'stock.context_processors.user_groups',
             ],
         },
     },
@@ -115,9 +116,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'fi-fi'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Helsinki'
 
 USE_I18N = True
 
@@ -198,4 +199,9 @@ LOGGING = {
 }
 
 SITE_URL = "http://localhost:8000"
-SITE_NAME = "AJASTON - varastotilausjärjestelmä" 
+SITE_NAME = "AJASTON - varastotilausjärjestelmä"
+
+# In settings.py
+AUTHENTICATION_BACKENDS = [
+     'django.contrib.auth.backends.ModelBackend', 
+]

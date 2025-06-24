@@ -1,14 +1,17 @@
 from django.contrib import admin
-from .models import Item, Order, WarehouseItem, Warehouse
+from .models import Item, Order, WarehouseItem, Warehouse, Workstation, Color
 
 admin.site.register(Order)
 admin.site.register(Warehouse)
+admin.site.register(Workstation)
+admin.site.register(Color)
+
 
 # Register your models here.
 @admin.register(Item)
 class ItemAdmin(admin.ModelAdmin):
-    list_display = ('koodi', 'nimike')
-    search_fields = ('koodi', 'nimike')
+    list_display = ('koodi', 'nimike','category')
+    search_fields = ('koodi', 'nimike', 'category')
 
 
 @admin.register(WarehouseItem)

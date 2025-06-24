@@ -1,4 +1,3 @@
-<!-- cart.html -->
 {% extends "base.html" %}
 
 {% block content %}
@@ -12,6 +11,8 @@
                 <tr>
                     <th>Koodi</th>
                     <th>Nimike</th>
+                    <th>Työpiste</th>
+                    <th>Väri</th>
                     <th>Määrä</th>
                     <th>Toiminnot</th>
                 </tr>
@@ -21,6 +22,20 @@
                 <tr>
                     <td>{{ item.item.koodi }}</td>
                     <td>{{ item.item.nimike }}</td>
+                    <td>
+                        {% if item.workstation %}
+                            {{ item.workstation.name_workstation }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if item.color %}
+                            {{ item.color.color }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
                     <td>
                         <div class="input-group" style="max-width: 120px;">
                             <a href="{% url 'decrease_item' item.id %}" class="btn btn-outline-secondary">-</a>
@@ -41,7 +56,7 @@
 
     <div class="d-flex justify-content-between mt-4">
         <a href="{% url 'stock_list' %}" class="btn btn-outline-primary">
-            <i class="fas fa-arrow-left me-1"></i> Jatka ostoksia
+            <i class="fas fa-arrow-left me-1"></i> Jatka tilausta
         </a>
         <form method="post" class="d-inline">
             {% csrf_token %}

@@ -4,6 +4,21 @@
 <div class="container mt-4">
     <h1>Varastonimikkeet</h1>
     
+    <!-- Category filter -->
+    <div class="mb-4">
+        <div class="btn-group" role="group">
+            <a href="{% url 'stock_list' %}" class="btn btn-outline-secondary {% if not selected_category %}active{% endif %}">
+                Kaikki
+            </a>
+            {% for value, label in categories %}
+                <a href="{% url 'stock_list' %}?category={{ value }}" 
+                   class="btn btn-outline-secondary {% if selected_category == value %}active{% endif %}">
+                    {{ label }}
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+    
     <div class="row mt-4">
         {% for wi in warehouse_items %}
         <div class="col-md-4 mb-4">
@@ -11,7 +26,7 @@
                 <div class="card-body">
                     <h5 class="card-title">{{ wi.item.nimike }}</h5>
                     <h6 class="card-subtitle mb-2 text-muted">{{ wi.item.koodi }}</h6>
-                    
+                    <span class="badge bg-info text-dark mb-2">{{ wi.item.get_category_display }}</span>
                     <p class="card-text">Varastosaldo: {{ wi.quantity }}</p>
                     <a href="{% url 'item_detail' wi.item.id %}" class="btn btn-primary">Tilaa</a>
                 </div>

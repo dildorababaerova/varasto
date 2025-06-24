@@ -29,6 +29,12 @@
                 Odottavat
             </a>
         </li>
+        <li class="nav-item">
+            <a class="nav-link {% if current_status == 'processing' %}active{% endif %} nav-link-custom " 
+               href="{% url 'warehouse_orders' %}?status=processing">
+                Käsittelyssä
+            </a>
+        </li>
         
         <li class="nav-item">
             <a class="nav-link {% if current_status == 'delivered' %}active{% endif %}" 
