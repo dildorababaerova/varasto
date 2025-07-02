@@ -8,6 +8,7 @@ from django.utils import timezone
 from django.db import transaction
 from django.contrib.admin.views.decorators import staff_member_required
 from django.core.paginator import Paginator
+from django.contrib.auth.models import Group
 import logging
 
 from .models import Item, Cart, CartItem, Order, Warehouse, WarehouseItem, Workstation, Color
@@ -233,7 +234,11 @@ def order_list(request):
 
 @login_required
 def order_detail(request, order_id):
-    order = get_object_or_404(Order, id=order_id, user=request.user)
+    order = get_object_or_404(Order.objects.select_related('user'), id=order_id)
+    
+    if not (request.user.is_superuser or is_warehouse_staff(request.user) or order.user == request.user):
+        messages.error(request, "Sinulla ei ole pääsyä tähän tilaukseen.")
+        return redirect('order_list')
     
     if request.method == 'POST':
         form = OrderCommentForm(request.POST, instance=order)
@@ -252,7 +257,10 @@ def order_detail(request, order_id):
 
 def is_warehouse_staff(user):
     """Check if user is warehouse staff (has permission but not full admin)"""
-    return user.is_authenticated and (user.is_staff or user.groups.filter(name='Warehouse Staff').exists())
+    return user.is_authenticated and (
+        user.is_staff or 
+        user.groups.filter(name__iexact='Warehouse Staff').exists()
+        )
 
 def warehouse_staff_required(view_func):
     def test_func(user):
@@ -261,18 +269,22 @@ def warehouse_staff_required(view_func):
 
 
 @login_required
-@user_passes_test(is_warehouse_staff)
+@user_passes_test(lambda u: u.is_superuser or is_warehouse_staff(u))
 def warehouse_orders(request):
-    if not is_warehouse_staff(request.user):
-        raise PermissionDenied
-    
     status = request.GET.get('status', 'pending')
-    orders = Order.objects.filter(status=status).order_by('created_at')
+    orders = Order.objects.filter(status=status).order_by('created_at').select_related('user')
     
     if request.method == 'POST':
         order_id = request.POST.get('order_id')
         order = get_object_or_404(Order, id=order_id)
         old_status = order.status
+        # Only allow status changes
+        new_status = request.POST.get('status')
+
+        if new_status in dict(Order.STATUS_CHOICES).keys():
+            order.status = new_status
+            order.save()
+
         form = OrderStatusForm(request.POST, instance=order)
         
         if form.is_valid():
@@ -415,11 +427,18 @@ def register_warehouse_staff(request):
     if request.method == 'POST':
         form = WarehouseStaffRegistrationForm(request.POST)
         if form.is_valid():
-            form.save()
-            return redirect('login')  # Перенаправляем на страницу входа
+            user = form.save()
+            try:
+                group = Group.objects.get(name__iexact='Warehouse Staff')
+                user.groups.add(group)
+                user.save()
+                messages.success(request, 'Varaston henkilöstö rekisteröity onnistuneesti.')
+            except Group.DoesNotExist:
+                messages.error(request, 'Varaston henkilöstö -ryhmää ei löydy. Ole hyvä ja luo se ensin.')
+            
+            return redirect('login')
     else:
         form = WarehouseStaffRegistrationForm()
     return render(request, 'registration/register_warehouse_staff.html', {'form': form})
-
 
 

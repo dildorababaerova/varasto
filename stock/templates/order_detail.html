@@ -12,6 +12,8 @@
             <tr>
                 <th>Tuote</th>
                 <th>Määrä</th>
+                <th>Työpiste</th>
+                <th>Väri</th>
             </tr>
         </thead>
         <tbody>
@@ -19,6 +21,8 @@
             <tr>
                 <td>{{ item.item }}</td>
                 <td>{{ item.quantity }}</td>
+                <td>{{ item.workstation }}</td>
+                <td>{{ item.color }}</td>
             </tr>
             {% endfor %}
         </tbody>

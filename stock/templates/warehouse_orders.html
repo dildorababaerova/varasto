@@ -1,7 +1,6 @@
 {% extends "base.html" %}
 {% block extra_css %}
-{% endblock %}
- <style>
+<style>
     .nav-link-custom:hover {
         color: #1a0fdd !important;
     }
@@ -18,26 +17,27 @@
         background-color: #f8f9fa;
     }
 </style>   
+{% endblock %}
+
 {% block content %}
 <div class="container mt-4">
     <h1>Varaston tilaukset</h1>
     
     <ul class="nav nav-tabs mb-4">
         <li class="nav-item">
-            <a class="nav-link {% if current_status == 'pending' %}active{% endif %} nav-link-custom " 
+            <a class="nav-link {% if current_status == 'pending' %}active{% endif %} nav-link-custom" 
                href="{% url 'warehouse_orders' %}?status=pending">
                 Odottavat
             </a>
         </li>
         <li class="nav-item">
-            <a class="nav-link {% if current_status == 'processing' %}active{% endif %} nav-link-custom " 
+            <a class="nav-link {% if current_status == 'processing' %}active{% endif %} nav-link-custom" 
                href="{% url 'warehouse_orders' %}?status=processing">
                 Käsittelyssä
             </a>
         </li>
-        
         <li class="nav-item">
-            <a class="nav-link {% if current_status == 'delivered' %}active{% endif %}" 
+            <a class="nav-link {% if current_status == 'delivered' %}active{% endif %} nav-link-custom" 
                href="{% url 'warehouse_orders' %}?status=delivered">
                 Toimitettu
             </a>
@@ -48,15 +48,30 @@
         {% for order in orders %}
         <div class="list-group-item">
             <div class="d-flex justify-content-between">
-                <h5>Tilaus #{{ order.id }} - {{ order.user.username }}</h5>
-                <!--<span class="badge bg-primary">{{ order.get_status_display }}</span>-->
+                <h5>Tilaus #{{ order.id }} - {{ order.user.username }} - {{ order.status }}</h5>
+                <span class="badge bg-{% if order.status == 'pending' %}warning{% elif order.status == 'processing' %}info{% else %}success{% endif %}">
+                    {{ order.get_status_display }}
+                </span>
             </div>
             <p>Luotu: {{ order.created_at|date:"d.m.Y H:i" }}</p>
             
-            <form method="post" class="mt-2">
+            <!--<div class="mt-2">
+                <h6>Tuotteet:</h6>
+                <ul>
+                    {% for item in order.cart.items.all %}
+                    <li>
+                        {{ item.item.nimike }} - {{ item.quantity }} kpl
+                        {% if item.workstation %} (Työpiste: {{ item.workstation.name }}){% endif %}
+                        {% if item.color %} (Väri: {{ item.color.name }}){% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>-->
+            
+            <form method="post" class="mt-3">
                 {% csrf_token %}
                 <input type="hidden" name="order_id" value="{{ order.id }}">
-                <div class="row">
+                <div class="row align-items-center">
                     <div class="col-md-4">
                         <select name="status" class="form-select">
                             {% for value, label in order.STATUS_CHOICES %}
@@ -66,16 +81,13 @@
                             {% endfor %}
                         </select>
                     </div>
-                    <div class="col-md-6">
-                        <input type="text" name="comment" class="form-control" placeholder="Päivitys">
-                    </div>
-                    <div class="col-md-2">
-                        <button type="submit" class="btn btn-primary">Päivitä</button>
+                    <div class="col-md-4">
+                        <button type="submit" class="btn btn-primary">Päivitä tila</button>
                     </div>
                 </div>
             </form>
             
-            <a href="{% url 'order_detail' order.id %}" class="btn btn-sm btn-info mt-2">Näytä tiedot</a>
+            <a href="{% url 'order_detail' order.id %}" class="btn btn-sm btn-info mt-2">Näytä tilauksen tiedot</a>
         </div>
         {% empty %}
         <div class="alert alert-info">Ei tilauksia tässä tilassa</div>
