@@ -372,7 +372,6 @@ def manage_stock(request):
 
 @staff_member_required
 def add_item(request, item_id=None):
-    # If item_id is provided, we're editing an existing item
     if item_id:
         item = get_object_or_404(Item, id=item_id)
         warehouse_item = get_object_or_404(WarehouseItem, item=item)
@@ -385,10 +384,16 @@ def add_item(request, item_id=None):
         quantity_form = QuantityForm(request.POST)
         
         if form.is_valid() and quantity_form.is_valid():
+            # Handle new color creation
+            new_color_name = form.cleaned_data.get('new_color')
+            if new_color_name:
+                color, created = Color.objects.get_or_create(color=new_color_name)
+                form.instance.color = color
+            
             # Save the item
             new_item = form.save()
             
-            # Get or create warehouse item
+            # Handle warehouse item
             warehouse_item, created = WarehouseItem.objects.get_or_create(
                 warehouse=Warehouse.objects.first(),
                 item=new_item,

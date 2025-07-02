@@ -1,5 +1,37 @@
 {% extends "base.html" %}
 
+{% block extra_css %}
+<style>
+    .add-color-link {
+        display: inline-block;
+        margin-left: 10px;
+        color: #0d6efd;
+        cursor: pointer;
+    }
+    .add-color-link:hover {
+        text-decoration: underline;
+    }
+    .color-section {
+        margin-bottom: 1rem;
+    }
+    .color-fields {
+        display: flex;
+        gap: 15px;
+        align-items: flex-end;
+    }
+    .color-select {
+        flex: 1;
+    }
+    .color-input {
+        flex: 1;
+    }
+    .form-text {
+        font-size: 0.875em;
+        color: #6c757d;
+    }
+</style>
+{% endblock %}
+
 {% block title %}{% if is_edit %}Muokkaa tuotetta{% else %}Lisää uusi tuote{% endif %}{% endblock %}
 
 {% block content %}
@@ -15,10 +47,10 @@
         <div class="card-body">
             <form method="post" class="mb-4 p-3 border rounded">
                 {% csrf_token %}
-                
-                <!-- Item Form Fields -->
-                <div class="form-group">
-                    {{ form.koodi.label_tag }}
+
+                <!-- Tärkeät kentät -->
+                <div class="form-group mb-3">
+                    <label for="id_koodi">Tuotekoodi:</label>
                     {{ form.koodi }}
                     {% if form.koodi.errors %}
                         <div class="alert alert-danger mt-2">
@@ -27,8 +59,8 @@
                     {% endif %}
                 </div>
                 
-                <div class="form-group">
-                    {{ form.nimike.label_tag }}
+                <div class="form-group mb-3">
+                    <label for="id_nimike">Nimike:</label>
                     {{ form.nimike }}
                     {% if form.nimike.errors %}
                         <div class="alert alert-danger mt-2">
@@ -37,11 +69,44 @@
                     {% endif %}
                 </div>
                 
-                
-                
-                <!-- Quantity Field -->
-                <div class="form-group">
-                    {{ quantity_form.quantity.label_tag }}
+                <div class="form-group mb-3">
+                    <label for="id_category">Kategoria:</label>
+                    {{ form.category }}
+                    {% if form.category.errors %}
+                        <div class="alert alert-danger mt-2">
+                            {{ form.category.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Väri valinta osio -->
+                <div class="form-group mb-3 color-section">
+                    <label>Väri:</label>
+                    <div class="color-fields">
+                        <div class="color-select">
+                            {{ form.color }}
+                            <a href="#" class="add-color-link" data-bs-toggle="modal" data-bs-target="#colorModal">
+                                <i class="fas fa-plus"></i> Lisää uusi väri
+                            </a>
+                        </div>
+                        
+                        <div class="color-input">
+                            <label for="id_new_color">Tai kirjoita uusi:</label>
+                            {{ form.new_color }}
+                            <small class="form-text">Kirjoita uusi väri, jos sitä ei ole listassa</small>
+                        </div>
+                    </div>
+                    {% if form.color.errors or form.new_color.errors %}
+                        <div class="alert alert-danger mt-2">
+                            {{ form.color.errors }}
+                            {{ form.new_color.errors }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Määrä varastossa -->
+                <div class="form-group mb-3">
+                    <label for="id_quantity">Määrä varastossa:</label>
                     {{ quantity_form.quantity }}
                     {% if quantity_form.quantity.errors %}
                         <div class="alert alert-danger mt-2">
@@ -50,8 +115,8 @@
                     {% endif %}
                 </div>
                 
-                <!-- Form Buttons -->
-                <div class="form-group">
+                <!-- Napit -->
+                <div class="form-group mt-4">
                     <button type="submit" class="btn btn-success">
                         <i class="fas fa-save"></i> Tallenna
                     </button>
@@ -63,4 +128,49 @@
         </div>
     </div>
 </div>
+
+<!-- Modali ikkuna värien lisäämiseksi -->
+<div class="modal fade" id="colorModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Lisää uusi väri</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="newColorName">Värin nimi:</label>
+                    <input type="text" class="form-control" id="newColorName" placeholder="Kirjoita värin nimi">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Peruuta</button>
+                <button type="button" class="btn btn-primary" id="saveNewColor">Tallenna</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Värien lisääminen
+    document.getElementById('saveNewColor').addEventListener('click', function() {
+        const colorName = document.getElementById('newColorName').value.trim();
+        if (colorName) {
+            // Täytetään uuden värin kenttä
+            document.getElementById('id_new_color').value = colorName;
+            // Suljetaan modaalinen ikkuna
+            bootstrap.Modal.getInstance(document.getElementById('colorModal')).hide();
+        }
+    });
+
+    // Tyhjennetään kenttä modaalisen ikkunan avautuessa
+    document.getElementById('colorModal').addEventListener('show.bs.modal', function() {
+        document.getElementById('newColorName').value = '';
+    });
+});
+</script>
+{% endblock %}
+
 {% endblock %}

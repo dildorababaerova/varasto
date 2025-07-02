@@ -1,5 +1,5 @@
 from django import forms
-from .models import CartItem, Order,Item
+from .models import CartItem, Order,Item, Color
 from django.core.validators import EmailValidator, RegexValidator
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
@@ -43,21 +43,49 @@ class OrderStatusForm(forms.ModelForm):
             'comment': 'Päivitys',
         }
 
+
+class ColorSelectWithAdd(forms.Select):
+    template_name = 'widgets/color_select_with_add.html'
+
+    def __init__(self, attrs=None):
+        super().__init__(attrs)
+        if attrs is None:
+            attrs = {}
+        attrs.update({'class': 'form-select'})
+        self.attrs = attrs
+
+
+
 class ItemForm(forms.ModelForm):
+    color = forms.ModelChoiceField(
+        queryset=Color.objects.all(),
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-control'}),
+        label='Valitse väri'
+    )
+    
+    new_color = forms.CharField(
+        required=False,
+        max_length=100,
+        widget=forms.TextInput(attrs={
+            'class': 'form-control',
+            'placeholder': 'Kirjoita uuden värin nimi'
+        }),
+        label='Tai lisää uusi väri'
+    )
+    
     class Meta:
         model = Item
-        fields = ['koodi', 'nimike', 'category' ]
+        fields = ['koodi', 'nimike', 'category', 'color']
         widgets = {
             'koodi': forms.TextInput(attrs={'class': 'form-control'}),
             'nimike': forms.TextInput(attrs={'class': 'form-control'}),
-            'category': forms.Select(choices=Item.CATEGORY_CHOICES)
-            
+            'category': forms.Select(attrs={'class': 'form-control'}, choices=Item.CATEGORY_CHOICES)
         }
         labels = {
             'koodi': 'Tuotekoodi',
             'nimike': 'Nimike',
-            'category': 'Kategoria',
-            
+            'category': 'Kategoria'
         }
 
 class QuantityForm(forms.Form):

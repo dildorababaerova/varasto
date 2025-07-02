@@ -1,0 +1,10 @@
+<select name="{{ widget.name }}"{% include "django/forms/widgets/attrs.html" %}>
+    {% for option in widget.options %}
+        {{ option }}
+    {% endfor %}
+</select>
+<div class="mt-2">
+    <a href="#" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#colorModal">
+        <i class="fas fa-plus"></i> Lisää uusi väri
+    </a>
+</div>
