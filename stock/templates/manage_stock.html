@@ -17,26 +17,34 @@
         <div class="card-body">
             <!-- Форма добавления товара -->
             <form method="post" class="mb-4 p-3 border rounded">
-                {% csrf_token %}
-                <div class="form-row align-items-center">
-                    <div class="col-md-5 mb-2">
-                        <select name="item_id" class="form-control select2" required>
-                            <option value="">Valitse tuote...</option>
-                            {% for item in items %}
-                            <option value="{{ item.id }}">{{ item.koodi }} - {{ item.nimike }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="col-md-4 mb-2">
-                        <input type="number" name="quantity" class="form-control" min="1" value="1" required>
-                    </div>
-                    <div class="col-md-3 mb-2">
-                        <button type="submit" class="btn btn-success btn-block">
-                            <i class="fas fa-plus"></i> Lisää varastoon
-                        </button>
-                    </div>
-                </div>
-            </form>
+    {% csrf_token %}
+    <div class="form-row align-items-center">
+        <div class="col-md-4 mb-2">
+            <select name="item_id" class="form-control select2" required>
+                <option value="">Valitse tuote...</option>
+                {% for item in items %}
+                <option value="{{ item.id }}">{{ item.koodi }} - {{ item.nimike }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3 mb-2">
+            <select name="color_id" class="form-control select2">
+                <option value="">Valitse väri...</option>
+                {% for color in color_choices %}
+                <option value="{{ color.id }}">{{ color }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3 mb-2">
+            <input type="number" name="quantity" class="form-control" min="1" value="1" required>
+        </div>
+        <div class="col-md-2 mb-2">
+            <button type="submit" class="btn btn-success btn-block">
+                <i class="fas fa-plus"></i> Lisää varastoon
+            </button>
+        </div>
+    </div>
+</form>
 
             <!-- Таблица остатков -->
             <div class="table-responsive">
@@ -45,6 +53,7 @@
                         <tr>
                             <th>Koodi</th>
                             <th>Nimike</th>
+                            <th>Väri</th>
                             <th>Määrä</th>
                             <th>Viimeksi päivitetty</th>
                             <th>Toiminnot</th>
@@ -55,6 +64,13 @@
                         <tr>
                             <td>{{ stock_item.item.koodi }}</td>
                             <td>{{ stock_item.item.nimike }}</td>
+                            <td>
+                                {% if stock_item.color %}
+                                    <span>{{ stock_item.color }}</span>
+                                {% else %}
+                                    <span>Ei väriä</span>
+                                {% endif %}
+                            </td>
                             <td class="font-weight-bold">{{ stock_item.quantity }} kpl</td>
                             <td>{{ stock_item.last_updated|date:"d.m.Y H:i" }}</td>
                             <td>
@@ -116,8 +132,15 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
 $(document).ready(function() {
-    $('.select2').select2({
+    // Initialize item select
+    $('select[name="item_id"]').select2({
         placeholder: "Valitse tuote...",
+        allowClear: true
+    });
+    
+    // Initialize color select
+    $('select[name="color_id"]').select2({
+        placeholder: "Valitse väri...",
         allowClear: true
     });
 });

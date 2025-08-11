@@ -324,9 +324,12 @@ def test_email(request):
     # views.py (admin-only)
 @staff_member_required
 def manage_stock(request):
+    color_choices = Color.objects.all()
+
     if request.method == 'POST':
         item_id = request.POST.get('item_id')
         quantity = int(request.POST.get('quantity', 0))
+        color_id = request.POST.get('color_id')
         
         if not item_id or quantity <= 0:
             messages.error(request, "Virheelliset tiedot")
@@ -335,10 +338,12 @@ def manage_stock(request):
         try:
             item = Item.objects.get(id=item_id)
             warehouse = Warehouse.objects.first()  # Assuming single warehouse
-            
+            color = Color.objects.get(id=color_id) if color_id else None
+
             warehouse_item, created = WarehouseItem.objects.get_or_create(
                 warehouse=warehouse,
                 item=item,
+                color=color,
                 defaults={'quantity': quantity}
             )
             
@@ -349,16 +354,21 @@ def manage_stock(request):
             messages.success(request, f"Tuote {item.nimike} päivitetty (+{quantity})")
             return redirect('manage_stock')
         
+        except Item.DoesNotExist:
+            messages.error(request, "Tuotetta ei löytynyt")
+        except Color.DoesNotExist:
+            messages.error(request, "Väriä ei löytynyt")
         except Exception as e:
             messages.error(request, f"Virhe: {str(e)}")
             return redirect('manage_stock')
     
     # Get all items for dropdown
     items = Item.objects.all().order_by('nimike')
+
     
     # Get warehouse items with pagination
     warehouse = Warehouse.objects.first()
-    warehouse_items_list = WarehouseItem.objects.filter(warehouse=warehouse).select_related('item').order_by('item__nimike')
+    warehouse_items_list = WarehouseItem.objects.filter(warehouse=warehouse).select_related('item', 'color').order_by('-last_updated')
     
     paginator = Paginator(warehouse_items_list, 25)  # Show 25 items per page
     page_number = request.GET.get('page')
@@ -366,15 +376,20 @@ def manage_stock(request):
     
     return render(request, 'manage_stock.html', {
         'items': items,
-        'warehouse_items': warehouse_items
+        'warehouse_items': warehouse_items,
+        'color_choices': color_choices
     })
 
 
 @staff_member_required
 def add_item(request, item_id=None):
+    color_choices = Color.objects.all()
+    color = None 
+
     if item_id:
         item = get_object_or_404(Item, id=item_id)
         warehouse_item = get_object_or_404(WarehouseItem, item=item)
+        color = item.color 
     else:
         item = None
         warehouse_item = None
@@ -385,8 +400,12 @@ def add_item(request, item_id=None):
         
         if form.is_valid() and quantity_form.is_valid():
             # Handle new color creation
+            selected_color_id = request.POST.get('color_id')
             new_color_name = form.cleaned_data.get('new_color')
-            if new_color_name:
+            if selected_color_id and selected_color_id != '':
+                color = get_object_or_404(Color, id=selected_color_id)
+                form.instance.color = color
+            elif new_color_name:
                 color, created = Color.objects.get_or_create(color=new_color_name)
                 form.instance.color = color
             
@@ -397,14 +416,19 @@ def add_item(request, item_id=None):
             warehouse_item, created = WarehouseItem.objects.get_or_create(
                 warehouse=Warehouse.objects.first(),
                 item=new_item,
+                color=color,
                 defaults={'quantity': quantity_form.cleaned_data['quantity']}
             )
             
             if not created:
                 warehouse_item.quantity = quantity_form.cleaned_data['quantity']
+                warehouse_item.color = color
                 warehouse_item.save()
             
+            messages.success(request, "Tuote tallennettu onnistuneesti!")
             return redirect('manage_stock')
+        else:
+            messages.error(request, "Tarkista lomakkeen tiedot")
     else:
         form = ItemForm(instance=item)
         initial_quantity = warehouse_item.quantity if warehouse_item else 0
@@ -413,7 +437,9 @@ def add_item(request, item_id=None):
     return render(request, 'add_item.html', {
         'form': form,
         'quantity_form': quantity_form,
-        'is_edit': item_id is not None
+        'is_edit': item_id is not None,
+        'color_choices': color_choices,
+        'color': color
     })
 
 def signup(request):

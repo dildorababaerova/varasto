@@ -85,6 +85,14 @@
                     <div class="color-fields">
                         <div class="color-select">
                             {{ form.color }}
+                            <select name="color" class="form-control" id="id_color">
+                                <option value="">Valitse väri...</option>
+                                {% for color in color_choices %}
+                                <option value="{{ color.id }}" {% if color.id == form.color.value %}selected{% endif %}>
+                                    {{ color.color }}
+                                </option>
+                                {% endfor %}
+                            </select>
                             <a href="#" class="add-color-link" data-bs-toggle="modal" data-bs-target="#colorModal">
                                 <i class="fas fa-plus"></i> Lisää uusi väri
                             </a>

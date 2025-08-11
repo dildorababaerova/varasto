@@ -8,6 +8,16 @@ from django.utils.html import strip_tags
 import logging
 logger = logging.getLogger(__name__)
 
+
+class Color(models.Model):
+    color = models.CharField(max_length=255, unique=True,  default="")
+
+    class Meta:
+        managed = True
+        
+    def __str__(self):
+        return f"{self.color}"
+
 class Item(models.Model):
     CATEGORY_CHOICES = [
         ('integraalit', 'Integraalit'),
@@ -19,6 +29,7 @@ class Item(models.Model):
     koodi = models.CharField(max_length=255, unique=True)
     nimike = models.CharField(max_length=255)
     category = models.CharField(max_length=100, choices=CATEGORY_CHOICES, default='integraalit')
+    color = models.ForeignKey(Color, on_delete=models.SET_NULL, null=True, blank=True)
     
     class Meta:
         managed = True
@@ -37,11 +48,12 @@ class Warehouse(models.Model):
 class WarehouseItem(models.Model):
     warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE)
     item = models.ForeignKey(Item, on_delete=models.CASCADE)
+    color = models.ForeignKey(Color, on_delete=models.SET_NULL, null=True, blank=True)
     quantity = models.PositiveIntegerField(default=0)
     last_updated = models.DateTimeField(auto_now=True)
 
     class Meta:
-        unique_together = ('warehouse', 'item')
+        unique_together = ('warehouse', 'item', 'color')
 
     def __str__(self):
         if self.item:
@@ -65,14 +77,7 @@ class Workstation(models.Model):
     def __str__(self):
         return f"{self.name_workstation}"
     
-class Color(models.Model):
-    color = models.CharField(max_length=255, unique=True,  default="")
 
-    class Meta:
-        managed = True
-        
-    def __str__(self):
-        return f"{self.color}"
 
 class CartItem(models.Model):
     cart = models.ForeignKey(Cart, related_name='items', on_delete=models.CASCADE)
