@@ -21,12 +21,8 @@ from django.contrib.auth.decorators import user_passes_test
 
 logger = logging.getLogger(__name__)
 
-
+# Home view
 def home(request):
-    # logger.debug("Это DEBUG сообщение")
-    # logger.info("Это INFO сообщение")
-    # logger.warning("Это WARNING сообщение")
-    # logger.error("Это ERROR сообщение")
     return render(request, 'main.html')
 
 @login_required

@@ -8,9 +8,9 @@ from django.utils.html import strip_tags
 import logging
 logger = logging.getLogger(__name__)
 
-
+# Color model for representing colors
 class Color(models.Model):
-    color = models.CharField(max_length=255, unique=True,  default="")
+    color = models.CharField(max_length=100, unique=True,  default="")
 
     class Meta:
         managed = True
@@ -18,6 +18,7 @@ class Color(models.Model):
     def __str__(self):
         return f"{self.color}"
 
+# Item model for representing items
 class Item(models.Model):
     CATEGORY_CHOICES = [
         ('integraalit', 'Integraalit'),
@@ -26,9 +27,9 @@ class Item(models.Model):
 
  ]
     
-    koodi = models.CharField(max_length=255, unique=True)
-    nimike = models.CharField(max_length=255)
-    category = models.CharField(max_length=100, choices=CATEGORY_CHOICES, default='integraalit')
+    koodi = models.CharField(max_length=50, unique=True)
+    nimike = models.CharField(max_length=100)
+    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, default='integraalit')
     color = models.ForeignKey(Color, on_delete=models.SET_NULL, null=True, blank=True)
     
     class Meta:
@@ -38,7 +39,7 @@ class Item(models.Model):
         return f"{self.koodi} {self.nimike}"
 
 class Warehouse(models.Model):
-    name = models.CharField(max_length=100, default="Varasto")
+    name = models.CharField(max_length=20, default="Varasto")
     items = models.ManyToManyField(Item, through='WarehouseItem')
 
     def __str__(self):
