@@ -8,6 +8,9 @@ from django.utils.html import strip_tags
 import logging
 logger = logging.getLogger(__name__)
 
+
+User.add_to_class('is_warehouse_staff', property(lambda u: u.groups.filter(name__iexact='Warehouse Staff').exists()))
+
 # Color model for representing colors
 class Color(models.Model):
     color = models.CharField(max_length=100, unique=True,  default="")

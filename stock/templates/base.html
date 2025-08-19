@@ -80,6 +80,7 @@
                             <i class="fas fa-truck me-1"></i> Varaston tilaukset
                         </a>
                     </li>
+
                     {% endif %}
                     
                     <li class="nav-item">
@@ -149,7 +150,8 @@
             <div class="row align-items-center">
                 <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
                     <p class="mb-0 text-secondary">&copy; 2025 Varastojärjestelmä. Kaikki oikeudet pidätetään.</p>
-                    {% if not user.is_authenticated %}
+                    {% if user.is_staff and user.is_superuser %}
+                        
                     <div class="mt-2">
                         <a href="{% url 'register_warehouse_staff' %}" class="btn btn-sm btn-outline-light">
                             <i class="fas fa-user-plus me-1"></i> Rekisteröi varastotyöntekijä

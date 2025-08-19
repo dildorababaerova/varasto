@@ -253,10 +253,7 @@ def order_detail(request, order_id):
 
 def is_warehouse_staff(user):
     """Check if user is warehouse staff (has permission but not full admin)"""
-    return user.is_authenticated and (
-        user.is_staff or 
-        user.groups.filter(name__iexact='Warehouse Staff').exists()
-        )
+    return user.groups.filter(name__iexact='Warehouse Staff').exists()
 
 def warehouse_staff_required(view_func):
     def test_func(user):
@@ -449,7 +446,7 @@ def signup(request):
 
     return render(request, 'registration/signup.html', {'form': form})
 
-
+@staff_member_required
 def register_warehouse_staff(request):
     if request.method == 'POST':
         form = WarehouseStaffRegistrationForm(request.POST)
@@ -457,8 +454,10 @@ def register_warehouse_staff(request):
             user = form.save()
             try:
                 group = Group.objects.get(name__iexact='Warehouse Staff')
+                print(group)
                 user.groups.add(group)
                 user.save()
+                print("User groups after addition:", user.groups.all())
                 messages.success(request, 'Varaston henkilöstö rekisteröity onnistuneesti.')
             except Group.DoesNotExist:
                 messages.error(request, 'Varaston henkilöstö -ryhmää ei löydy. Ole hyvä ja luo se ensin.')

@@ -148,15 +148,53 @@ class CustomUserCreationForm(UserCreationForm):
 
 
 class WarehouseStaffRegistrationForm(UserCreationForm):
+    username = forms.CharField(
+        max_length=30,
+        label=_('Käyttäjätunnus'),
+        widget=forms.TextInput(attrs={'class': 'form-control'}),
+        validators=[
+            RegexValidator(
+                r'^[\w.@+-]+$',
+                _('Käyttäjätunnuksessa saa olla vain kirjaimia, numeroita ja @/./+/-/_ -merkkejä.')
+            ),
+            
+        ]
+    )
+
+    first_name = forms.CharField(
+        max_length=30,
+        label=_('Etunimi'),
+        widget=forms.TextInput(attrs={'class': 'form-control'}),
+        validators=[RegexValidator(
+        r'^[\w.@+\-äöÄÖÅå]+$',
+        _('Käyttäjätunnuksessa saa olla vain kirjaimia, numeroita ja @/./+/-/_ -merkkejä.')
+        )]
+        )
+
+    
+
+    last_name = forms.CharField(
+        max_length=30,
+        label=_('Sukunimi'),
+        widget=forms.TextInput(attrs={'class': 'form-control'}),
+        validators=[RegexValidator(r'^[a-zA-Z\s\-]+$', 'Vaan kirjaimet ja välilyönnit')]
+    )
+
+    
     class Meta:
         model = User
-        fields = ['username', 'password1', 'password2']
+        fields = ['username', 'first_name', 'last_name', 'email','password1', 'password2']
+        widgets = {
+            'email': forms.EmailInput(attrs={'class': 'form-control'}),
+        }
+
 
     def save(self, commit=True):
         user = super().save(commit=False)
         if commit:
             user.save()
-            # Добавляем пользователя в группу Warehouse Staff
+            print("Groups before:", user.groups.all())  # Debug
             warehouse_staff_group = Group.objects.get(name='Warehouse Staff')
             user.groups.add(warehouse_staff_group)
+            print("Groups after:", user.groups.all())  # Debug
         return user

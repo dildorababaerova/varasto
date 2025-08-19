@@ -1,12 +1,76 @@
 {% extends "base.html" %}
 
+{% block title %}Rekisteröi Varastotyöntekijä{% endblock %}
+
 {% block content %}
-<div class="container mt-4">
-    <h2>Rekisteröi Varastotyöntekijä</h2>
+<div class="signup-form">
+    <h2><i class="fas fa-user-plus me-2"></i> Rekisteröi Varastotyöntekijä</h2>
     <form method="post">
         {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="btn btn-primary">Rekisteröi</button>
+
+        <div class="form-group">
+            <label for="{{ form.username.id_for_label }}">
+                <i class="fas fa-user input-icon"></i> Käyttäjätunnus
+            </label>
+            {{ form.username }}
+            {% for error in form.username.errors %}
+                <div class="text-danger">{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.first_name.id_for_label }}">
+                <i class="fas fa-signature input-icon"></i> Etunimi
+            </label>
+            {{ form.first_name }}
+            {% for error in form.first_name.errors %}
+                <div class="text-danger">{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.last_name.id_for_label }}">
+                <i class="fas fa-signature input-icon"></i> Sukunimi
+            </label>
+            {{ form.last_name }}
+            {% for error in form.last_name.errors %}
+                <div class="text-danger">{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.email.id_for_label }}">
+                <i class="fas fa-envelope input-icon"></i> Sähköposti
+            </label>
+            {{ form.email }}
+            {% for error in form.email.errors %}
+                <div class="text-danger">{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.password1.id_for_label }}">
+                <i class="fas fa-lock input-icon"></i> Salasana
+            </label>
+            {{ form.password1 }}
+            {% for error in form.password1.errors %}
+                <div class="text-danger">{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        <div class="form-group">
+            <label for="{{ form.password2.id_for_label }}">
+                <i class="fas fa-lock input-icon"></i> Vahvista salasana
+            </label>
+            {{ form.password2 }}
+            {% for error in form.password2.errors %}
+                <div class="text-danger">{{ error }}</div>
+            {% endfor %}
+        </div>
+
+        <button type="submit" class="button">
+            <i class="fas fa-user-plus me-2"></i>Rekisteröi Työntekijä
+        </button>
     </form>
 </div>
 {% endblock %}
