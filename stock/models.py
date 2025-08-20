@@ -8,7 +8,7 @@ from django.utils.html import strip_tags
 import logging
 logger = logging.getLogger(__name__)
 
-
+# Add a property to the User model to check if the user is a warehouse staff member
 User.add_to_class('is_warehouse_staff', property(lambda u: u.groups.filter(name__iexact='Warehouse Staff').exists()))
 
 # Color model for representing colors
@@ -33,7 +33,6 @@ class Item(models.Model):
     koodi = models.CharField(max_length=50, unique=True)
     nimike = models.CharField(max_length=100)
     category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, default='integraalit')
-    color = models.ForeignKey(Color, on_delete=models.SET_NULL, null=True, blank=True)
     
     class Meta:
         managed = True

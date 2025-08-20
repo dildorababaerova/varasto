@@ -8,7 +8,7 @@ from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import Group
 
-
+# AddToCartForm for adding items to the cart
 class AddToCartForm(forms.ModelForm):
     
     quantity = forms.IntegerField(min_value=1, label="Määrä")
@@ -23,6 +23,7 @@ class AddToCartForm(forms.ModelForm):
         model = CartItem
         fields = ['quantity', 'comment']
 
+# Order comment form for adding comments to orders
 class OrderCommentForm(forms.ModelForm):
     class Meta:
         model = Order
@@ -34,6 +35,7 @@ class OrderCommentForm(forms.ModelForm):
             'comment': 'Lisäkommentti',
         }
 
+# Order status form for updating the status of orders
 class OrderStatusForm(forms.ModelForm):
     class Meta:
         model = Order
@@ -43,7 +45,7 @@ class OrderStatusForm(forms.ModelForm):
             'comment': 'Päivitys',
         }
 
-
+# Color selection form with the option to add a new color
 class ColorSelectWithAdd(forms.Select):
     template_name = 'widgets/color_select_with_add.html'
 
@@ -55,7 +57,7 @@ class ColorSelectWithAdd(forms.Select):
         self.attrs = attrs
 
 
-
+# ItemForm for creating and updating items with color selection
 class ItemForm(forms.ModelForm):
     color = forms.ModelChoiceField(
         queryset=Color.objects.all(),
@@ -96,7 +98,7 @@ class QuantityForm(forms.Form):
     )
 
 
-# Regidtration workers
+# Registration workers
 
 class CustomUserCreationForm(UserCreationForm):
     username = forms.CharField(
@@ -146,7 +148,7 @@ class CustomUserCreationForm(UserCreationForm):
         }
 
 
-
+# Registration form for warehouse staff with group assignment
 class WarehouseStaffRegistrationForm(UserCreationForm):
     username = forms.CharField(
         max_length=30,
@@ -188,7 +190,7 @@ class WarehouseStaffRegistrationForm(UserCreationForm):
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
         }
 
-
+    # Save the user and assign to the warehouse staff group
     def save(self, commit=True):
         user = super().save(commit=False)
         if commit:

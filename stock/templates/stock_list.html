@@ -1,42 +1,87 @@
 {% extends "base.html" %}
-
+ 
 {% block content %}
 <div class="container mt-4">
-    <h1>Varastonimikkeet</h1>
-    
-    <!-- Category filter -->
-    <div class="mb-4">
-        <div class="btn-group" role="group">
-            <a href="{% url 'stock_list' %}" class="btn btn-outline-secondary {% if not selected_category %}active{% endif %}">
+<h1>Varastonimikkeet</h1>
+<!-- Category filter -->
+<div class="mb-4">
+<div class="btn-group" role="group">
+<a href="{% url 'stock_list' %}" class="btn btn-outline-secondary {% if not selected_category %}active{% endif %}">
                 Kaikki
-            </a>
+</a>
             {% for value, label in categories %}
-                <a href="{% url 'stock_list' %}?category={{ value }}" 
+<a href="{% url 'stock_list' %}?category={{ value }}" 
                    class="btn btn-outline-secondary {% if selected_category == value %}active{% endif %}">
                     {{ label }}
-                </a>
+</a>
             {% endfor %}
-        </div>
-    </div>
-    
-    <div class="row mt-4">
-        {% for wi in warehouse_items %}
-        <div class="col-md-4 mb-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">{{ wi.item.nimike }}</h5>
-                    <h6 class="card-subtitle mb-2 text-muted">{{ wi.item.koodi }}</h6>
-                    <span class="badge bg-info text-dark mb-2">{{ wi.item.get_category_display }}</span>
-                    <p class="card-text">Varastosaldo: {{ wi.quantity }}</p>
-                    <a href="{% url 'item_detail' wi.item.id %}" class="btn btn-primary">Tilaa</a>
-                </div>
-            </div>
-        </div>
+</div>
+</div>
+<div class="row mt-4">
+        {% for wi in page_obj %}
+<div class="col-md-4 mb-4">
+<div class="card">
+<div class="card-body">
+<h5 class="card-title">{{ wi.item.nimike }}</h5>
+<h6 class="card-subtitle mb-2 text-muted">{{ wi.item.koodi }}</h6>
+<span class="badge bg-info text-dark mb-2">{{ wi.item.get_category_display }}</span>
+<p class="card-text">Varastosaldo: {{ wi.quantity }}</p>
+<a href="{% url 'item_detail' wi.item.id %}" class="btn btn-primary">Tilaa</a>
+</div>
+</div>
+</div>
         {% empty %}
-        <div class="col-12">
-            <div class="alert alert-info">Varastossa ei ole tuotteita</div>
-        </div>
+<div class="col-12">
+<div class="alert alert-info">Varastossa ei ole tuotteita</div>
+</div>
         {% endfor %}
-    </div>
+</div>
+ 
+    <!-- Pagination controls -->
+    {% if page_obj.paginator.num_pages > 1 %}
+<nav aria-label="Page navigation">
+<ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+<li class="page-item">
+<a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if selected_category %}&category={{ selected_category }}{% endif %}" aria-label="Edellinen">
+<span aria-hidden="true">&laquo;</span>
+</a>
+</li>
+            {% else %}
+<li class="page-item disabled">
+<a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+<span aria-hidden="true">&laquo;</span>
+</a>
+</li>
+            {% endif %}
+ 
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+<li class="page-item active" aria-current="page">
+<a class="page-link" href="#">{{ num }}</a>
+</li>
+                {% else %}
+<li class="page-item">
+<a class="page-link" href="?page={{ num }}{% if selected_category %}&category={{ selected_category }}{% endif %}">{{ num }}</a>
+</li>
+                {% endif %}
+            {% endfor %}
+ 
+            {% if page_obj.has_next %}
+<li class="page-item">
+<a class="page-link" href="?page={{ page_obj.next_page_number }}{% if selected_category %}&category={{ selected_category }}{% endif %}" aria-label="Seuraava">
+<span aria-hidden="true">&raquo;</span>
+</a>
+</li>
+            {% else %}
+<li class="page-item disabled">
+<a class="page-link" href="#" tabindex="-1" aria-disabled="true">
+<span aria-hidden="true">&raquo;</span>
+</a>
+</li>
+            {% endif %}
+</ul>
+</nav>
+    {% endif %}
 </div>
 {% endblock %}

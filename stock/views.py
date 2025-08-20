@@ -25,6 +25,7 @@ logger = logging.getLogger(__name__)
 def home(request):
     return render(request, 'main.html')
 
+# Stock list view
 @login_required
 def stock_list(request):
     warehouse = Warehouse.objects.first()
@@ -46,15 +47,19 @@ def stock_list(request):
         warehouse_items = warehouse_items.filter(item__category=selected_category)
     
     logger.info(f"Found {warehouse_items.count()} available warehouse items")
+    paginator = Paginator(warehouse_items, 30) 
+    page_number = request.GET.get('page') 
+    page_obj = paginator.get_page(page_number)
+
     
     return render(request, 'stock_list.html', {
-        'warehouse_items': warehouse_items,
+        'page_obj': page_obj,
         'warehouse': warehouse,
         'categories': Item.CATEGORY_CHOICES,
         'selected_category': selected_category
     })
 
-
+# Item detail view
 @login_required
 def item_detail(request, item_id):
     item = get_object_or_404(Item, id=item_id)
@@ -381,8 +386,9 @@ def add_item(request, item_id=None):
 
     if item_id:
         item = get_object_or_404(Item, id=item_id)
-        warehouse_item = get_object_or_404(WarehouseItem, item=item)
-        color = item.color 
+        warehouse_item = WarehouseItem.objects.filter(item=item).first()
+        if warehouse_item:
+            color = warehouse_item.color
     else:
         item = None
         warehouse_item = None
@@ -467,4 +473,8 @@ def register_warehouse_staff(request):
         form = WarehouseStaffRegistrationForm()
     return render(request, 'registration/register_warehouse_staff.html', {'form': form})
 
-
+def delete_item(request, item_id):
+    item = get_object_or_404(Item, id=item_id)
+    item.delete()
+    messages.success(request, "Tuote poistettu onnistuneesti!")
+    return redirect('manage_stock')

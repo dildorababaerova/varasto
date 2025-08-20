@@ -10,7 +10,7 @@ admin.site.register(Color)
 # Register your models here.
 @admin.register(Item)
 class ItemAdmin(admin.ModelAdmin):
-    list_display = ('koodi', 'category', 'nimike', 'color')
+    list_display = ('koodi', 'category', 'nimike')
     search_fields = ('koodi', 'nimike', 'category')
 
 

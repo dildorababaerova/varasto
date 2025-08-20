@@ -84,7 +84,7 @@ footer a:hover {
 
 
 
-/* Muodon kentä*/
+/* Muodon kenttä*/
 
 .login-form input {
     width: 100%;
@@ -209,6 +209,17 @@ footer a:hover {
 
     background-color: #1a47c4;
 
+}
+@media (min-width: 850px) {
+    .menutext {
+        display: none;
+    }
+}
+
+@media (min-width: 1000px) {
+    .menutext {
+        display: inline;
+    }
 }
 
 
