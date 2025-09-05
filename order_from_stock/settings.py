@@ -12,6 +12,11 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 import os
 from pathlib import Path
+from dotenv import load_dotenv
+load_dotenv()
+
+
+
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -25,9 +30,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-b4_jp)*(s33x703jr&vh6*u5bd665ge+4h_%mptlya8yt8e@u)'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS','localhost').split(',')
+
 
 
 # Application definition
@@ -65,6 +71,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'stock.views.cart_context',
+                'stock.context_processors.user_groups',
             ],
         },
     },
@@ -78,8 +85,12 @@ WSGI_APPLICATION = 'order_from_stock.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': os.getenv('DB_ENGINE', 'django.db.backends.postgresql'),
+        'NAME': os.getenv('DB_NAME'),
+        'USER': os.getenv('DB_USER'),
+        'PASSWORD': os.getenv('DB_PASSWORD'),   
+        'HOST': os.getenv('DB_HOST'),
+        'PORT': os.getenv('DB_PORT'),  # Default PostgreSQL port  
     }
 }
 
@@ -106,9 +117,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'fi-fi'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Europe/Helsinki'
 
 USE_I18N = True
 
@@ -118,8 +129,9 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
-
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'stock/static')]
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
@@ -129,51 +141,69 @@ MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
 
 
 # settings.py
+# Email settings (development)
 if DEBUG:
-    # For development - print emails to console
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-    DEFAULT_FROM_EMAIL = 'django.core.mail.backends.console.EmailBackend'
-    WAREHOUSE_EMAIL = 'django.core.mail.backends.console.EmailBackend'
+    DEFAULT_FROM_EMAIL = 'noreply@example.com'  # Произвольный email
+    WAREHOUSE_EMAIL = 'warehouse@example.com'   # Произвольный email
 else:
-    # Production settings for Gmail
-    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    EMAIL_HOST = 'smtp.gmail.com'
-    EMAIL_PORT = 587
-    EMAIL_USE_TLS = True
-    EMAIL_HOST_USER = 'your@gmail.com'
-    EMAIL_HOST_PASSWORD = 'your-password-or-app-password'
-    DEFAULT_FROM_EMAIL = 'your@gmail.com'
-    WAREHOUSE_EMAIL = 'warehouse@yourdomain.com'  # Your warehouse notification email
+    # Production email settings (оставьте ваши реальные настройки для продакшена)
+    # EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    # EMAIL_HOST = 'smtp.gmail.com'
+    # EMAIL_PORT = 587
+    # EMAIL_USE_TLS = True
+    # EMAIL_HOST_USER = 'your@gmail.com'
+    # EMAIL_HOST_PASSWORD = 'your-password-or-app-password'
+    # DEFAULT_FROM_EMAIL = 'your@gmail.com'
+    # WAREHOUSE_EMAIL = 'warehouse@yourdomain.com'
 
-    LOGIN_URL = 'login'  # URL name for login page
-    LOGIN_REDIRECT_URL = 'stock_list'  # Where to redirect after login
-    LOGOUT_REDIRECT_URL = 'home'  # Where to redirect after logout
 
-    LOGGING = {
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # For development
+    EMAIL_HOST = os.getenv('EMAIL_HOST')
+    EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
+    EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
+    EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+    EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+    DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL')
+    EMAIL_SUBJECT_PREFIX = os.getenv('EMAIL_SUBJECT_PREFIX', '[RJ] ')
+
+    ADMIN_EMAIL = os.getenv('ADMINS')    
+
+LOGIN_URL = 'login'  # URL name for login page
+LOGIN_REDIRECT_URL = 'stock_list'  # Where to redirect after login
+LOGOUT_REDIRECT_URL = 'home'  # Where to redirect after logout
+
+LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        },
+    },
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
         },
     },
     'root': {
         'handlers': ['console'],
-        'level': 'DEBUG',
+        'level': 'INFO',
     },
     'loggers': {
-        'django': {
-            'handlers': ['console'],
-            'level': os.getenv('DJANGO_LOG_LEVEL', 'INFO'),
-            'propagate': False,
-        },
-        'stock': {  # Имя вашего приложения
+        'stock': {
             'handlers': ['console'],
             'level': 'DEBUG',
             'propagate': False,
         },
     },
 }
-    
+
 SITE_URL = "http://localhost:8000"
-SITE_NAME = "AJASTON - varastotilausjärjestelmä" 
+SITE_NAME = "AJASTON - varastotilausjärjestelmä"
+
+# In settings.py
+AUTHENTICATION_BACKENDS = [
+     'django.contrib.auth.backends.ModelBackend', 
+]

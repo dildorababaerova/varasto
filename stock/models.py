@@ -8,14 +8,60 @@ from django.utils.html import strip_tags
 import logging
 logger = logging.getLogger(__name__)
 
+# Add a property to the User model to check if the user is a warehouse staff member
+User.add_to_class('is_warehouse_staff', property(lambda u: u.groups.filter(name__iexact='Warehouse Staff').exists()))
+
+# Color model for representing colors
+class Color(models.Model):
+    color = models.CharField(max_length=100, unique=True,  default="")
+
+    class Meta:
+        managed = True
+        
+    def __str__(self):
+        return f"{self.color}"
+
+# Item model for representing items
 class Item(models.Model):
-    koodi = models.CharField(max_length=255)
-    nimike = models.CharField(max_length=255)
-    lisanimike = models.CharField(max_length=255)
-    saldo = models.IntegerField(default=0)
+    CATEGORY_CHOICES = [
+        ('integraalit', 'Integraalit'),
+        ('elastomeerit', 'Elastomeerit'),
+        ('kovat', 'Kovat'),
+
+ ]
+    
+    koodi = models.CharField(max_length=50, unique=True)
+    nimike = models.CharField(max_length=100)
+    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, default='integraalit')
+    
+    class Meta:
+        managed = True
+        
+    def __str__(self):
+        return f"{self.koodi} {self.nimike}"
+
+class Warehouse(models.Model):
+    name = models.CharField(max_length=20, default="Varasto")
+    items = models.ManyToManyField(Item, through='WarehouseItem')
 
     def __str__(self):
-        return f"{self.koodi} {self.nimike} {self.lisanimike}"
+        return f"{self.name} "
+
+
+class WarehouseItem(models.Model):
+    warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE)
+    item = models.ForeignKey(Item, on_delete=models.CASCADE)
+    color = models.ForeignKey(Color, on_delete=models.SET_NULL, null=True, blank=True)
+    quantity = models.PositiveIntegerField(default=0)
+    last_updated = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('warehouse', 'item', 'color')
+
+    def __str__(self):
+        if self.item:
+            return f"{self.item.koodi} {self.item.nimike} - Määrä: {self.quantity}"
+        return f"Varastossa #{self.id} (ei ole tuotetta)"
 
 class Cart(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -25,17 +71,36 @@ class Cart(models.Model):
     def __str__(self):
         return f"Cart #{self.id} - {self.user.username}"
 
+class Workstation(models.Model):
+    name_workstation = models.CharField(max_length=255, unique=True, default="")
+
+    class Meta:
+        managed = True
+        
+    def __str__(self):
+        return f"{self.name_workstation}"
+    
+
+
 class CartItem(models.Model):
     cart = models.ForeignKey(Cart, related_name='items', on_delete=models.CASCADE)
     item = models.ForeignKey(Item, on_delete=models.CASCADE)
     quantity = models.PositiveIntegerField(default=1)
+    comment = models.TextField(blank=True)
+    workstation = models.ForeignKey(Workstation, on_delete=models.SET_NULL, null=True, blank=True)
+    color = models.ForeignKey(Color, on_delete=models.SET_NULL, null=True, blank=True)
     
     def __str__(self):
-        return f"{self.quantity}x {self.item}"
-
+        desc = f"{self.quantity}x {self.item}"
+        if self.workstation:
+            desc += f" ({self.workstation})"
+        if self.color:
+            desc += f" [{self.color}]"
+        return desc
 class Order(models.Model):
     STATUS_CHOICES = [
         ('pending', 'Odottaa'),
+        ('processing', 'Käsitelyssä'),
         ('delivered', 'Toimitettu'),
     ]
     
@@ -62,6 +127,7 @@ class Order(models.Model):
         try:
             with transaction.atomic():
                 #  Tarkistetaan, että tilaus on valmis käsiteltäväksi
+                warehouse = Warehouse.objects.first()
                 cart_items = (
                     self.cart.items
                     .select_related('item')
@@ -69,19 +135,24 @@ class Order(models.Model):
                 )
 
                 for cart_item in cart_items:
-                    item = cart_item.item
-                    if item.saldo < cart_item.quantity:
+                    warehouse_item = WarehouseItem.objects.select_for_update().get(
+                    warehouse=warehouse,
+                    item=cart_item.item
+                )
+                    if warehouse_item.quantity < cart_item.quantity:
                         raise ValueError(
-                            f" {item.nimike} ({item.koodi}) ei ole riittävästi varastossa. "
-                            f"Varastossa: {item.saldo}, Pyydetty: {cart_item.quantity}"
+                            f" {cart_item.item.nimike} ({cart_item.item.koodi}) ei ole riittävästi varastossa. "
+                            f"Varastossa: {warehouse_item.quantity}, Pyydetty: {cart_item.quantity}"
                         )
                     
-                    item.saldo -= cart_item.quantity
-                    item.save()
+                    warehouse_item.quantity -= cart_item.quantity
+                    warehouse_item.save()
                     logger.info(
-                        f"Varaston saldo päivitetty tuotteelle {item.koodi}: "
-                        f"-{cart_item.quantity}, uusi saldo: {item.saldo}"
+                        f"Varaston saldo päivitetty tuotteelle {cart_item.item.koodi}: "
+                        f"-{cart_item.quantity}, uusi saldo: {warehouse_item.quantity}"
                     )
+        except WarehouseItem.DoesNotExist:
+            raise ValueError(f" Valittu {cart_item.item.nimike} tuote ei ole varastossa.")
         except Exception as e:
             logger.error(f"Virhe tilauksen käsittelyssä: {e}")
             raise
@@ -162,3 +233,7 @@ class Order(models.Model):
             logger.info(f"New order notification sent for order #{self.id}")
         except Exception as e:
             logger.error(f"Error sending new order notification: {e}")
+
+
+
+    

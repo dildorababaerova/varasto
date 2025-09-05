@@ -1,25 +1,40 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
+
+{% block title %}Kirjautuminen{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6 col-lg-4">
-            <div class="card shadow">
-                <div class="card-body p-4">
-                    <h2 class="card-title text-center mb-4">Kirjaudu sisään</h2>
-                    <form method="post">
-                        {% csrf_token %}
-                        {{ form.as_p }}
-                        <button type="submit" class="btn btn-primary w-100 mt-3">
-                            <i class="fas fa-sign-in-alt me-2"></i> Kirjaudu
-                        </button>
-                    </form>
-                    <div class="text-center mt-3">
-                        <a href="{% url 'password_reset' %}">Unohtuiko salasana?</a>
-                    </div>
-                </div>
-            </div>
+<div class="signup-form">
+    <h2 class="login-title">Kirjaudu sisään</h2>
+    
+    <!-- Alert error  -->
+    {% if form.errors %}
+        <div class="alert alert-danger">
+            Virheellinen käyttäjätunnus tai salasana. Yritä uudelleen.
         </div>
-    </div>
+    {% endif %}
+
+    <form method="post">
+        {% csrf_token %}
+        
+        <!-- Username field -->
+        <div class="form-group">
+            <label for="{{ form.username.id_for_label }}">Käyttäjätunnus</label>
+            {{ form.username }}
+        </div>
+
+        <!-- Password fild -->
+        <div class="form-group">
+            <label for="{{ form.password.id_for_label }}">Salasana</label>
+            {{ form.password }}
+        </div>
+
+        <!-- Submit button -->
+        <button type="submit" class="button">Kirjaudu sisään</button>
+    </form>
+
+    <!-- Link to rigtration -->
+    <p class="mt-3">
+        Eikö sinulla ole tiliä? <a href="{% url 'signup' %}" class="button">Rekisteröidy</a>
+    </p>
 </div>
 {% endblock %}

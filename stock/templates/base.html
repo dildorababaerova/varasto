@@ -7,7 +7,8 @@
     <title>{% block title %}Varastojärjestelmä{% endblock %}</title>
     
     <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'stock/bootstrap.css' %}">
+    
     
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -20,6 +21,11 @@
         .navbar-custom {
             background-color:rgb(9, 56, 126) !important;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            font-size:20px;
+        }
+        
+        .container a:hover {
+            color: #d0cbcb !important;
         }
         .bg-primary-custom {
             background-color: #0d6efd !important;
@@ -34,7 +40,7 @@
             transition: color 0.3s;
         }
         .footer-links a:hover {
-            color: #fff;
+            color: #ffffff;
         }
     </style>
 </head>
@@ -50,27 +56,44 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
+                    {% if user.is_staff and user.is_superuser %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'stock_list' %}">
-                            <i class="fas fa-boxes me-1"></i> Varastojärjestelmä
+                        <a class="nav-link" href="{% url 'warehouse_orders' %}">
+                            <i class="fas fa-truck me-1"></i> <div class='menutext'>Varaston tilaukset</div>
+                        </a>
+                    </li>
+                    
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'manage_stock' %}">
+                            <i class="fas fa-thin fa-warehouse"></i> <div class='menutext'>Varaston hallinta</div>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'stock_list' %}">
-                            <i class="fas fa-boxes me-1"></i> Nimikkeet
-                        </a>
-                    </li>
-                    {% if user.is_authenticated %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'order_list' %}">
-                            <i class="fas fa-clipboard-list me-1"></i> Omat tilaukset
+                        <a class="nav-link" href="{% url 'admin:index' %}">
+                            <i class="fas fa-cog me-1"></i> <div class='menutext'>Admin</div>
                         </a>
                     </li>
                     {% endif %}
-                    {% if user.is_staff %}
+
+                    {% if is_warehouse_staff %}
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'warehouse_orders' %}">
-                            <i class="fas fa-truck me-1"></i> Varaston tilaukset
+                            <i class="fas fa-truck me-1"></i> <div class='menutext'>Varaston tilaukset</div>
+                        </a>
+                    </li>
+
+                    {% endif %}
+                    
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'stock_list' %}">
+                            <i class="fas fa-boxes me-1"></i> <div class='menutext'>Nimikkeet</div>
+                        </a>
+                    </li>
+                    
+                    {% if user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'order_list' %}">
+                            <i class="fas fa-clipboard-list me-1"></i> <div class='menutext'>Omat tilaukset</div>
                         </a>
                     </li>
                     {% endif %}
@@ -79,7 +102,7 @@
                     {% if user.is_authenticated %}
                     <li class="nav-item">
                         <a class="nav-link position-relative" href="{% url 'cart_view' %}">
-                            <i class="fas fa-shopping-cart me-1"></i> Ostoskori
+                            <i class="fas fa-shopping-cart me-1"></i> <div class='menutext'>Tilaukset</div>
                             {% if cart_items_count > 0 %}
                             <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary-custom">
                                 {{ cart_items_count }}
@@ -128,6 +151,14 @@
             <div class="row align-items-center">
                 <div class="col-md-6 text-center text-md-start mb-3 mb-md-0">
                     <p class="mb-0 text-secondary">&copy; 2025 Varastojärjestelmä. Kaikki oikeudet pidätetään.</p>
+                    {% if user.is_staff and user.is_superuser %}
+                        
+                    <div class="mt-2">
+                        <a href="{% url 'register_warehouse_staff' %}" class="btn btn-sm btn-outline-light">
+                            <i class="fas fa-user-plus me-1"></i> Rekisteröi varastotyöntekijä
+                        </a>
+                    </div>
+                    {% endif %}
                 </div>
                 <div class="col-md-6 text-center text-md-end footer-links">
                     <a href="#" class="me-3">Käyttöehdot</a>
@@ -138,8 +169,11 @@
         </div>
     </footer>
 
-    <!-- Bootstrap JS Bundle with Popper -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- JavaScript Libraries -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"></script>
     
     {% block extra_js %}{% endblock %}
 </body>
