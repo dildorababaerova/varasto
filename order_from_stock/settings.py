@@ -12,8 +12,11 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 import os
 from pathlib import Path
+# from django.contrib.messages import constants as message_constants
 from dotenv import load_dotenv
+
 load_dotenv()
+
 
 
 
@@ -30,15 +33,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-b4_jp)*(s33x703jr&vh6*u5bd665ge+4h_%mptlya8yt8e@u)'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-<<<<<<< Updated upstream
-DEBUG = False
-
+#DEBUG = True
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS','localhost').split(',')
 
-=======
-DEBUG = True
-ALLOWED_HOSTS = []
->>>>>>> Stashed changes
+DEBUG = False
+#ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -149,30 +148,21 @@ MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
 # Email settings (development)
 if DEBUG:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-    DEFAULT_FROM_EMAIL = 'noreply@example.com'  # Произвольный email
-    WAREHOUSE_EMAIL = 'warehouse@example.com'   # Произвольный email
 else:
     # Production email settings (оставьте ваши реальные настройки для продакшена)
-    # EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    # EMAIL_HOST = 'smtp.gmail.com'
-    # EMAIL_PORT = 587
-    # EMAIL_USE_TLS = True
-    # EMAIL_HOST_USER = 'your@gmail.com'
-    # EMAIL_HOST_PASSWORD = 'your-password-or-app-password'
-    # DEFAULT_FROM_EMAIL = 'your@gmail.com'
-    # WAREHOUSE_EMAIL = 'warehouse@yourdomain.com'
-
-
-    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # For development
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'  # For development
     EMAIL_HOST = os.getenv('EMAIL_HOST')
     EMAIL_PORT = int(os.getenv('EMAIL_PORT', 587))
     EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
     EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
     EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
     DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL')
-    EMAIL_SUBJECT_PREFIX = os.getenv('EMAIL_SUBJECT_PREFIX', '[RJ] ')
+    EMAIL_SUBJECT_PREFIX = os.getenv('EMAIL_SUBJECT_PREFIX', '[Varasto] ')
 
-    ADMIN_EMAIL = os.getenv('ADMINS')    
+    # Admins and staff settings
+    WAREHOUSE_EMAIL = os.getenv('WAREHOUSE_EMAIL')
+    ADMINS = [('Varastotyöntekija', WAREHOUSE_EMAIL)] if WAREHOUSE_EMAIL else []
+ 
 
 LOGIN_URL = 'login'  # URL name for login page
 LOGIN_REDIRECT_URL = 'stock_list'  # Where to redirect after login
