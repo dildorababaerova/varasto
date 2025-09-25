@@ -37,11 +37,16 @@ def stock_list(request):
     selected_category = request.GET.get('category')
     
     # Get warehouse items with quantities > 0
+    #warehouse_items = WarehouseItem.objects.filter(
+    #    warehouse=warehouse,
+    #    quantity__gt=0
+    #).select_related('item')
+
+    # Get also negative items...
     warehouse_items = WarehouseItem.objects.filter(
-        warehouse=warehouse,
-        quantity__gt=0
+        warehouse=warehouse
     ).select_related('item')
-    
+
     # Filter by category if selected
     if selected_category:
         warehouse_items = warehouse_items.filter(item__category=selected_category)
