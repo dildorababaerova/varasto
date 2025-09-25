@@ -88,13 +88,13 @@ def item_detail(request, item_id):
                 return redirect('item_detail', item_id=item.id)
                 
             if available <= 0:
-                messages.error(request, "Tuote ei ole varastossa")
-                return redirect('stock_list')
+                messages.warning(request, "Tuote ei ole varastossa")
+               # return redirect('stock_list')
                 
             if quantity > available:
-                messages.error(request, 
-                    f"Pyytämäsi määrä ({quantity}) ylittää varastosaldon ({available})")
-                return redirect('item_detail', item_id=item.id)
+                messages.warning(request, 
+                    f"Huom! Pyytämäsi määrä ({quantity} kpl) ylittää varastosaldon ({available} kpl). Tilauksen jälkeen varastosaldoksi jää {available-quantity} kpl!")
+                # return redirect('item_detail', item_id=item.id)
             
             cart, created = Cart.objects.get_or_create(
                 user=request.user, 

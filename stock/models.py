@@ -52,7 +52,7 @@ class WarehouseItem(models.Model):
     warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE)
     item = models.ForeignKey(Item, on_delete=models.CASCADE)
     color = models.ForeignKey(Color, on_delete=models.SET_NULL, null=True, blank=True)
-    quantity = models.PositiveIntegerField(default=0)
+    quantity = models.IntegerField(default=0)
     last_updated = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -139,11 +139,11 @@ class Order(models.Model):
                     warehouse=warehouse,
                     item=cart_item.item
                 )
-                    if warehouse_item.quantity < cart_item.quantity:
-                        raise ValueError(
-                            f" {cart_item.item.nimike} ({cart_item.item.koodi}) ei ole riittävästi varastossa. "
-                            f"Varastossa: {warehouse_item.quantity}, Pyydetty: {cart_item.quantity}"
-                        )
+                    # if warehouse_item.quantity < cart_item.quantity:
+                        # raise ValueError(
+                            # f" {cart_item.item.nimike} ({cart_item.item.koodi}) ei ole riittävästi varastossa. "
+                            # f"Varastossa: {warehouse_item.quantity}, Pyydetty: {cart_item.quantity}"
+                        # )
                     
                     warehouse_item.quantity -= cart_item.quantity
                     warehouse_item.save()
