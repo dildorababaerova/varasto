@@ -71,17 +71,17 @@
                                     <span class="text-muted">Ei väriä</span>
                                 {% endif %}
                             </td>
-                            <td class="fw-bold">{{ stock_item.quantity }} kpl</td>
+                            <td class="fw-bold">{{ stock_item.quantity }} kg</td>
                             <td>{{ stock_item.last_updated|date:"d.m.Y H:i" }}</td>
                             <td>
                                 <div class="btn-group ">
-                                    <a href="{% url 'edit_item' stock_item.item.id %}" 
+                                    <a href="{% url 'edit_item' stock_item.item.id stock_item.id %}" 
                                        class="btn btn-sm btn-warning" title="Muokkaa">
                                         <i class="fas fa-edit"></i>
                                     </a>
                                     <button type="button" class="btn btn-sm btn-danger delete-btn mx-2" 
                                             data-bs-toggle="modal" data-bs-target="#confirmDeleteModal"
-                                            data-delete-url="{% url 'delete_item' stock_item.item.id %}" 
+                                            data-delete-url="{% url 'delete_item' stock_item.id %}" 
                                             title="Poista">
                                         <i class="fas fa-trash"></i>
                                     </button>

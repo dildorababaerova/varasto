@@ -87,7 +87,7 @@
                             </div>
                             
                             <div class="col-md-6 mb-3">
-                                <label for="id_nimike" class="form-label">Nimike *</label>
+                                <label for="id_nimike" class="form-label">Nimike </label>
                                 {{ form.nimike }}
                                 {% if form.nimike.errors %}
                                     <div class="alert alert-danger mt-2 p-2">
@@ -125,9 +125,9 @@
                                 <label for="id_color_select" class="form-label">Valitse olemassa oleva väri</label>
                                 <select name="color_id" class="form-select" id="id_color_select">
                                     <option value="">-- Valitse väri --</option>
-                                    {% for color in color_choices %}
-                                    <option value="{{ color.id }}" {% if color.id == color.id %}selected{% endif %}>
-                                        {{ color.color }}
+                                    {% for color_option in color_choices %}
+                                    <option value="{{ color_option.id }}" {% if color and color_option.id == color.id %}selected{% endif %}>
+                                        {{ color_option.color }}
                                     </option>
                                     {% endfor %}
                                 </select>

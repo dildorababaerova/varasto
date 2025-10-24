@@ -17,6 +17,8 @@ class Color(models.Model):
 
     class Meta:
         managed = True
+        verbose_name = 'Väri'
+        verbose_name_plural = 'Värit'
         
     def __str__(self):
         return f"{self.color}"
@@ -31,11 +33,13 @@ class Item(models.Model):
  ]
     
     koodi = models.CharField(max_length=50, unique=True)
-    nimike = models.CharField(max_length=100)
+    nimike = models.CharField(max_length=100, null=True, blank=True)
     category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, default='integraalit')
     
     class Meta:
         managed = True
+        verbose_name = 'Tuote'
+        verbose_name_plural = 'Tuotteet'
         
     def __str__(self):
         return f"{self.koodi} {self.nimike}"
@@ -46,6 +50,11 @@ class Warehouse(models.Model):
 
     def __str__(self):
         return f"{self.name} "
+    
+    class Meta:
+        managed = True
+        verbose_name = 'Varasto'
+        verbose_name_plural = 'Varastot'
 
 
 class WarehouseItem(models.Model):
@@ -57,6 +66,8 @@ class WarehouseItem(models.Model):
 
     class Meta:
         unique_together = ('warehouse', 'item', 'color')
+        verbose_name = 'Varaston tuote'
+        verbose_name_plural = 'Varaston tuotteet'
 
     def __str__(self):
         if self.item:
@@ -76,6 +87,8 @@ class Workstation(models.Model):
 
     class Meta:
         managed = True
+        verbose_name = 'Työpiste'
+        verbose_name_plural = 'Työpisteet'
         
     def __str__(self):
         return f"{self.name_workstation}"
@@ -97,6 +110,10 @@ class CartItem(models.Model):
         if self.color:
             desc += f" [{self.color}]"
         return desc
+    
+
+    
+
 class Order(models.Model):
     STATUS_CHOICES = [
         ('pending', 'Odottaa'),
@@ -110,9 +127,16 @@ class Order(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     comment = models.TextField(blank=True)
+
+        
+    class Meta:
+        managed = True
+        verbose_name = 'Tilaus'
+        verbose_name_plural = 'Tilaukset'
     
     def __str__(self):
         return f"Order #{self.id} - {self.user.username}"
+    
     
     def save(self, *args, **kwargs):
         # Send email notification when status changes

@@ -14,7 +14,7 @@
 <h3>Tuotteet:</h3>
 <ul>
 {% for item in order.cart.items.all %}
-    <li>{{ item.item.nimike }} - {{ item.quantity }} kpl</li>
+    <li>{{ item.item.nimike }} - {{ item.quantity }} kg</li>
 {% endfor %}
 </ul>
 

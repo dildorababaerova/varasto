@@ -60,7 +60,7 @@
                 <ul>
                     {% for item in order.cart.items.all %}
                     <li>
-                        {{ item.item.nimike }} - {{ item.quantity }} kpl
+                        {{ item.item.nimike }} - {{ item.quantity }} kg
                         {% if item.workstation %} (Työpiste: {{ item.workstation.name }}){% endif %}
                         {% if item.color %} (Väri: {{ item.color.name }}){% endif %}
                     </li>
