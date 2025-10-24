@@ -130,7 +130,7 @@ class CustomUserCreationForm(UserCreationForm):
         max_length=30,
         label=_('Sukunimi'),
         widget=forms.TextInput(attrs={'class': 'form-control'}),
-        validators=[RegexValidator(r'^[a-zA-Z\s\-]+$', 'Vaan kirjaimet ja välilyönnit')]
+        validators=[RegexValidator(r'^[\w.@+\-äöÄÖÅå]+$', 'Vaan kirjaimet ja välilyönnit')]
     )
 
     # phone_number = forms.CharField(

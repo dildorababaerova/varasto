@@ -48,10 +48,12 @@
         {% for order in orders %}
         <div class="list-group-item">
             <div class="d-flex justify-content-between">
-                <h5>Tilaus #{{ order.id }} - {{ order.user.username }} - {{ order.status }}</h5>
+                {% for item in order.cart.items.all %}
+                <h5>Tilaus #{{ order.id }} - {% if item.workstation %} (Työpiste: {{ item.workstation }}){% endif %} - {{ item.item.koodi}} - {{ item.quantity }} kg</h5>
                 <span class="badge bg-{% if order.status == 'pending' %}warning{% elif order.status == 'processing' %}info{% else %}success{% endif %}">
                     {{ order.get_status_display }}
                 </span>
+                 {% endfor %}
             </div>
             <p>Luotu: {{ order.created_at|date:"d.m.Y H:i" }}</p>
             
@@ -67,6 +69,7 @@
                     {% endfor %}
                 </ul>
             </div>-->
+
             
             <form method="post" class="mt-3">
                 {% csrf_token %}
