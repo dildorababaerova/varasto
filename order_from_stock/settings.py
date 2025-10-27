@@ -36,7 +36,7 @@ SECRET_KEY = 'django-insecure-b4_jp)*(s33x703jr&vh6*u5bd665ge+4h_%mptlya8yt8e@u)
 # DEBUG = True
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS','localhost').split(',')
 
-# CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS','http://localhost').split(',')
+CSRF_TRUSTED_ORIGINS = os.getenv('CSRF_TRUSTED_ORIGINS','http://localhost').split(',')
 
 DEBUG = False
 # ALLOWED_HOSTS = []

@@ -14,6 +14,7 @@
                 <th>Määrä</th>
                 <th>Työpiste</th>
                 <th>Väri</th>
+                <th>Kommentti</th>
             </tr>
         </thead>
         <tbody>
@@ -22,16 +23,16 @@
                 <td>{{ item.item }}</td>
                 <td>{{ item.quantity }}</td>
                 <td>{{ item.workstation }}</td>
-                <td>{{ item.color }}</td>
+                <td>{{ item.color }}</td> 
+                {% if item.comment %}
+                <td>{{ item.comment }}</td>
+                {% endif %}
             </tr>
             {% endfor %}
         </tbody>
     </table>
     
-    {% if order.comment %}
-    <h3>Kommentti</h3>
-    <p>{{ order.comment }}</p>
-    {% endif %}
+    
     
     <a href="{% url 'warehouse_orders' %}" class="btn btn-secondary">Takaisin tilauslistaan</a>
 </div>
