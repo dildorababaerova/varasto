@@ -140,6 +140,7 @@ class Order(models.Model):
         
     class Meta:
         managed = True
+        ordering = ['-created_at']
         verbose_name = 'Tilaus'
         verbose_name_plural = 'Tilaukset'
     

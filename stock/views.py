@@ -277,7 +277,7 @@ def warehouse_staff_required(view_func):
 @user_passes_test(lambda u: u.is_superuser or is_warehouse_staff(u))
 def warehouse_orders(request):
     status = request.GET.get('status', 'pending')
-    orders = Order.objects.filter(status=status).order_by('created_at').select_related('user')
+    orders = Order.objects.filter(status=status).select_related('user')
     
     if request.method == 'POST':
         order_id = request.POST.get('order_id')
