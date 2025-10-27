@@ -16,10 +16,12 @@ from .forms import AddToCartForm, CustomUserCreationForm, OrderCommentForm, Orde
 
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth.decorators import user_passes_test
+from .models import format_database_error
 
 
 
 logger = logging.getLogger(__name__)
+
 
 # Home view
 def home(request):
@@ -513,7 +515,8 @@ def add_item(request, item_id=None, warehouseItem_id=None):
                         warehouse_item, created = WarehouseItem.objects.get_or_create(
                             warehouse=warehouse,
                             item=item,
-                            defaults={'quantity': quantity_form.cleaned_data['quantity']}
+                            defaults={'quantity': quantity_form.cleaned_data['quantity'],
+                                        'color': color}
                         )
                     
                     if not created:
@@ -530,7 +533,8 @@ def add_item(request, item_id=None, warehouseItem_id=None):
                 
             except Exception as e:
                 logger.error(f"Error saving item: {e}")
-                messages.error(request, f"Tallennusvirhe: {str(e)}")
+                friendly_error = format_database_error(e)
+                messages.error(request, friendly_error)
         else:
             messages.error(request, "Tarkista lomakkeen tiedot")
     else:

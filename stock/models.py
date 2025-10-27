@@ -11,6 +11,9 @@ logger = logging.getLogger(__name__)
 # Add a property to the User model to check if the user is a warehouse staff member
 User.add_to_class('is_warehouse_staff', property(lambda u: u.groups.filter(name__iexact='Warehouse Staff').exists()))
 
+
+
+
 # Color model for representing colors
 class Color(models.Model):
     color = models.CharField(max_length=100, unique=True,  default="")
@@ -32,17 +35,23 @@ class Item(models.Model):
 
  ]
     
-    koodi = models.CharField(max_length=50, unique=True)
-    nimike = models.CharField(max_length=100, null=True, blank=True)
+    koodi = models.CharField(max_length=50)
+    nimike = models.CharField(max_length=100, null=True, blank=True, default=' - ')
     category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, default='integraalit')
+    color = models.ForeignKey(Color, on_delete=models.SET_NULL, null=True, blank=True)
     
     class Meta:
         managed = True
         verbose_name = 'Tuote'
         verbose_name_plural = 'Tuotteet'
+        constraints=[
+            models.UniqueConstraint(fields=['koodi', 'color'], name='unique_item_code_name')
+        ]
         
     def __str__(self):
         return f"{self.koodi} {self.nimike}"
+    
+
 
 class Warehouse(models.Model):
     name = models.CharField(max_length=20, default="Varasto")
@@ -259,5 +268,20 @@ class Order(models.Model):
             logger.error(f"Error sending new order notification: {e}")
 
 
+def format_database_error(error):
+    """
+    Muuntaa tietokantavirheet käyttäjäystävällisiksi viesteiksi.
+    """
+    error_str = str(error)
+    
+    if 'unique_item_code_name' in error_str:
+        return "⚠️ Tuote on jo olemassa\n\n" \
+            "tällä tuotekoodilla ja värillä on jo tuote järjestelmässä.\n\n" \
+            "Käytä toista tuotekoodia tai valitse eri väri tai muokkaa olemassa olevaa tuotetta."
+    
+    else:
+        return "⚠️ Tallennusvirhe\n\n" \
+            "Tapahtui odottamaton virhe tuotetta tallennettaessa.\n\n" \
+            "• Tarkasta kaikki kentät tai yritä uudelleen"
 
     
