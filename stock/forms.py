@@ -156,7 +156,7 @@ class WarehouseStaffRegistrationForm(UserCreationForm):
         widget=forms.TextInput(attrs={'class': 'form-control'}),
         validators=[
             RegexValidator(
-                r'^[\w.@+\-äöÄÖÅå]+$'
+                r'^[\w.@+\-äöÄÖÅå]+$',
                 _('Käyttäjätunnuksessa saa olla vain kirjaimia, numeroita ja @/./+/-/_ -merkkejä.')
             ),
             
