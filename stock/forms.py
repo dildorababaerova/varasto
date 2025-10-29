@@ -156,7 +156,7 @@ class WarehouseStaffRegistrationForm(UserCreationForm):
         widget=forms.TextInput(attrs={'class': 'form-control'}),
         validators=[
             RegexValidator(
-                r'^[\w.@+-]+$',
+                r'^[\w.@+\-äöÄÖÅå]+$'
                 _('Käyttäjätunnuksessa saa olla vain kirjaimia, numeroita ja @/./+/-/_ -merkkejä.')
             ),
             
@@ -179,7 +179,7 @@ class WarehouseStaffRegistrationForm(UserCreationForm):
         max_length=30,
         label=_('Sukunimi'),
         widget=forms.TextInput(attrs={'class': 'form-control'}),
-        validators=[RegexValidator(r'^[a-zA-Z\s\-]+$', 'Vaan kirjaimet ja välilyönnit')]
+        validators=[RegexValidator(r'^[\w.@+\-äöÄÖÅå]+$', 'Vaan kirjaimet ja välilyönnit')]
     )
 
     
