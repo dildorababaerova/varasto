@@ -11,9 +11,6 @@ logger = logging.getLogger(__name__)
 # Add a property to the User model to check if the user is a warehouse staff member
 User.add_to_class('is_warehouse_staff', property(lambda u: u.groups.filter(name__iexact='Warehouse Staff').exists()))
 
-
-
-
 # Color model for representing colors
 class Color(models.Model):
     color = models.CharField(max_length=100, unique=True,  default="")
@@ -52,7 +49,6 @@ class Item(models.Model):
     def __str__(self):
         return f"{self.koodi} {self.nimike}"
     
-
 
 class Warehouse(models.Model):
     name = models.CharField(max_length=20, default="Varasto")
@@ -109,7 +105,6 @@ class Workstation(models.Model):
         return f"{self.name_workstation}"
     
 
-
 class CartItem(models.Model):
     cart = models.ForeignKey(Cart, related_name='items', on_delete=models.CASCADE)
     item = models.ForeignKey(Item, on_delete=models.CASCADE)
@@ -125,8 +120,6 @@ class CartItem(models.Model):
         if self.color:
             desc += f" [{self.color}]"
         return desc
-    
-
     
 
 class Order(models.Model):
@@ -166,7 +159,7 @@ class Order(models.Model):
         """Uusittu tilauksen käsittely."""
         try:
             with transaction.atomic():
-                #  Tarkistetaan, että tilaus on valmis käsiteltäväksi
+                #  Check and update warehouse stock
                 warehouse = Warehouse.objects.first()
                 cart_items = (
                     self.cart.items
@@ -201,13 +194,13 @@ class Order(models.Model):
         try:
             subject = f"Tilauksesi tila on muuttunut ({self.get_status_display()})"
 
-            # renderoidaan template HTML
+            # render HTML template
             html_content = render_to_string(
                 'emails/status_notification.html',
                 {'order': self}
             )
             
-            # Luodaan email viesti
+            # Create email message
             msg = EmailMultiAlternatives(
                 subject,
                 strip_tags(html_content),  # Tekstiversio
@@ -234,7 +227,7 @@ class Order(models.Model):
                 {'order': self}
             )
 
-            # Luodaan email viesti
+            # Create email message
             msg = EmailMultiAlternatives(
                 subject,
                 strip_tags(html_content),  # Tekstiversio

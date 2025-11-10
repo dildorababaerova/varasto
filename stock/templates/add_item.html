@@ -116,7 +116,7 @@
 
                         {% else %}
                         
-                        <!-- Tärkeät kentät -->
+                        <!-- Important fields -->
                         <div class="row mb-4">
                             <div class="col-md-6 mb-3">
                                 <label for="id_koodi" class="form-label">Tuotekoodi *</label>
@@ -157,24 +157,9 @@
                                     </div>
                                 {% endif %}
                             </div>
-
-                            <!-- ДОБАВЛЕНО: Поле is_frequently_used -->
-                            <div class="col-md-12 mb-3">
-                                <div class="form-check">
-                                    {{ form.is_frequently_used }}
-                                    <label class="form-check-label" for="id_is_frequently_used">
-                                        {{ form.is_frequently_used.label }}
-                                    </label>
-                                </div>
-                                {% if form.is_frequently_used.errors %}
-                                    <div class="alert alert-danger mt-2 p-2">
-                                        {{ form.is_frequently_used.errors }}
-                                    </div>
-                                {% endif %}
-                            </div>
                         </div>
 
-                        <!-- Väri valinta osio -->
+                        <!-- Color selection -->
                         <div class="color-section mb-4">
                             <h5 class="mb-3">Värin valinta</h5>
                             
@@ -205,7 +190,7 @@
                             </div>
                         </div>
                         {% endif %}                       
-                        <!-- Napit -->
+                        <!-- Buttons -->
                         <div class="d-flex gap-2 justify-content-end mt-4 pt-3 border-top">
                             <a href="{% url 'manage_stock' %}" class="btn btn-secondary">
                                 <i class="fas fa-times me-1"></i> Peruuta
@@ -224,7 +209,7 @@
     </div>
 </div>
 
-<!-- Modali ikkuna värien lisäämiseksi -->
+<!-- Modal for adding colors -->
 <div class="modal fade" id="colorModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -245,7 +230,7 @@
         </div>
     </div>
 </div>
-<!-- Modali ikkuna värien vahvistamiseksi -->
+<!-- Modal for confirming color addition -->
 <div class="modal fade" id="colorConfirmModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -267,41 +252,41 @@
 {% block extra_js %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Värien lisääminen
+    // Color addition logic
     document.getElementById('saveNewColor').addEventListener('click', function() {
         const colorName = document.getElementById('newColorName').value.trim();
         const confirmMessage = document.getElementById('colorConfirmMessage');
         
         if (colorName) {
-            // Täytetään uuden värin kenttä
+            // Fill the new color field
             document.getElementById('id_new_color').value = colorName;
             
-            // Suljetaan värien lisäys modaalinen ikkuna
+            // Hide the add color modal
             const colorModal = bootstrap.Modal.getInstance(document.getElementById('colorModal'));
             colorModal.hide();
             
-            // Näytetään vahvistusmodaali
+            // Show confirmation modal
             confirmMessage.textContent = 'Uusi väri "' + colorName + '" on lisätty. Muista tallentaa lomake!';
             const confirmModal = new bootstrap.Modal(document.getElementById('colorConfirmModal'));
             confirmModal.show();
             
-            // Tyhjennetään syöttökenttä seuraavaa käyttöä varten
+            // Empty the input field
             document.getElementById('newColorName').value = '';
             
         } else {
-            // Virheviesti
+            // Error message
             confirmMessage.textContent = 'Kirjoita värin nimi ennen tallentamista.';
             const confirmModal = new bootstrap.Modal(document.getElementById('colorConfirmModal'));
             confirmModal.show();
         }
     });
 
-    // Tyhjennetään kenttä modaalisen ikkunan avautuessa
+    // Empty the input field when the modal opens
     document.getElementById('colorModal').addEventListener('show.bs.modal', function() {
         document.getElementById('newColorName').value = '';
     });
     
-    // Estetään lomakkeen lähetyksen Enter-näppäimellä modaalissa
+    // Prevent form submission on Enter key in color name input
     document.getElementById('newColorName').addEventListener('keypress', function(e) {
         if (e.key === 'Enter') {
             e.preventDefault();
@@ -309,7 +294,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Для Warehouse Staff - делаем все поля кроме quantity readonly
+    // For warehouse staff - make fields readonly/disabled
     {% if is_warehouse_staff %}
         const inputs = document.querySelectorAll('input, select, textarea');
         inputs.forEach(input => {
