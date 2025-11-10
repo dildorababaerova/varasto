@@ -5,18 +5,21 @@ from django.contrib import messages
 from django.core.mail import send_mail
 from django.conf import settings
 from django.utils import timezone
-from django.db import transaction
+from django.db import transaction, models
+from django.db.models import Sum
+
 from django.contrib.admin.views.decorators import staff_member_required
 from django.core.paginator import Paginator
 from django.contrib.auth.models import Group
 import logging
 
 from .models import Item, Cart, CartItem, Order, Warehouse, WarehouseItem, Workstation, Color
-from .forms import AddToCartForm, CustomUserCreationForm, OrderCommentForm, OrderStatusForm, ItemForm, QuantityForm, WarehouseStaffRegistrationForm
+from .forms import AddToCartForm, CustomUserCreationForm, OrderCommentForm, OrderStatusForm, ItemForm, QuantityForm, WarehouseStaffRegistrationForm, WarehouseStaffQuantityForm
 
 from django.core.exceptions import PermissionDenied
 from django.contrib.auth.decorators import user_passes_test
 from .models import format_database_error
+from stock import models
 
 
 
@@ -26,6 +29,44 @@ logger = logging.getLogger(__name__)
 # Home view
 def home(request):
     return render(request, 'main.html')
+
+
+# def increase_usage_count(item):
+#     item.usage_count += 1
+#     item.save()
+
+# # Или показывать популярные товары
+# def get_popular_items():
+#     return Item.objects.filter(usage_count__gt=0).order_by('-usage_count')[:10]
+
+# def update_frequently_used():
+#     # Товары с usage_count > 5 помечаем как часто используемые
+#     Item.objects.filter(usage_count__gt=3).update(is_frequently_used=True)
+
+# def get_popular_koodi_choices():
+#     """All koodi sorted by popularity"""
+#     all_koodi = Item.objects.values('koodi').annotate(
+#         total_usage=Sum('usage_count')
+#     ).order_by('-total_usage', 'koodi')[:25]
+    
+#     choices = [('', '-- Valitse tuotekoodi --')]
+    
+#     for item in all_koodi:
+#         if item['total_usage'] and item['total_usage'] > 0:
+#             display_text = f"{item['koodi']} ({item['total_usage']} kpl)"
+#         else:
+#             display_text = item['koodi']
+#         choices.append((item['koodi'], display_text))
+    
+#     return choices
+
+# def get_popular_color_choices():
+#     """All colors sorted by popularity"""
+#     popular_colors = Color.objects.annotate(
+#         total_usage=Sum('item__usage_count')
+#     ).order_by('-total_usage', 'color')
+    
+#     return popular_colors
 
 # Stock list view
 @login_required
@@ -47,9 +88,9 @@ def stock_list(request):
     # Get also negative items...
     warehouse_items = WarehouseItem.objects.filter(
         warehouse=warehouse
-    ).select_related('item')
-
+    ).select_related('item').order_by('item__koodi')
     # Filter by category if selected
+    
     if selected_category:
         warehouse_items = warehouse_items.filter(item__category=selected_category)
     
@@ -66,6 +107,8 @@ def stock_list(request):
         'selected_category': selected_category
     })
 
+
+
 # Item detail view
 @login_required
 def item_detail(request, item_id):
@@ -74,14 +117,14 @@ def item_detail(request, item_id):
     colors = Color.objects.all()  # Get all colors
     warehouse = Warehouse.objects.first()
     
-    try:
-        warehouse_item = WarehouseItem.objects.get(
-            warehouse=warehouse,
-            item=item
-        )
+    warehouse_item = WarehouseItem.objects.filter(
+        warehouse=warehouse,
+        item=item
+    ).first()  # Берем первый найденный
+    
+    if warehouse_item:
         available = warehouse_item.quantity
-    except WarehouseItem.DoesNotExist:
-        warehouse_item = None
+    else:
         available = 0
         messages.warning(request, "Tätä tuotetta ei ole varastossa")
     
@@ -116,7 +159,7 @@ def item_detail(request, item_id):
                 workstation = Workstation.objects.get(id=workstation_id) if workstation_id else None
                 color = Color.objects.get(id=color_id) if color_id else None
             except (Workstation.DoesNotExist, Color.DoesNotExist):
-                messages.error(request, "Virheellinen työpiste tai väri")
+                messages.error(request, "Kirjoita työpiste tai väri")
                 return redirect('item_detail', item_id=item.id)
             
             cart_item, created = CartItem.objects.get_or_create(
@@ -174,7 +217,7 @@ def cart_view(request):
                 )
                 cart.is_ordered = True
                 cart.save()
-                
+
                 # process_order() transaction sisältä
                 # Tämä metodi voi sisältää logiikan, joka vähentää saldoa varastosta
                 order.process_order()
@@ -233,7 +276,11 @@ def order_list(request):
         cart__is_ordered=False
     ).count()
     
-    orders = Order.objects.filter(user=request.user).order_by('-created_at')
+    orders = Order.objects.filter(
+        user=request.user
+        ).exclude(
+        status='delivered' 
+        ).order_by('-created_at')
     
     return render(request, 'order_list.html', {
         'orders': orders,
@@ -265,13 +312,20 @@ def order_detail(request, order_id):
 
 def is_warehouse_staff(user):
     """Check if user is warehouse staff (has permission but not full admin)"""
-    return user.groups.filter(name__iexact='Warehouse Staff').exists()
+    return user.is_authenticated and user.groups.filter(name__iexact='Warehouse Staff').exists()
 
 def warehouse_staff_required(view_func):
-    def test_func(user):
-        return is_warehouse_staff(user)
-    return user_passes_test(test_func)(view_func)
+    def wrapper(request, *args, **kwargs):
+        if is_warehouse_staff(request.user):
+            return view_func(request, *args, **kwargs)
+        raise PermissionDenied
+    return wrapper
 
+def staff_or_warehouse_required(view_func):
+    """Decorator to allow access to staff or warehouse staff users."""
+    def test_func(user):
+        return user.is_superuser or is_warehouse_staff(user)
+    return user_passes_test(test_func)(view_func)
 
 @login_required
 @user_passes_test(lambda u: u.is_superuser or is_warehouse_staff(u))
@@ -327,7 +381,7 @@ def test_email(request):
     
 
     # views.py (admin-only)
-@staff_member_required
+@staff_or_warehouse_required
 def manage_stock(request):
     color_choices = Color.objects.all()
 
@@ -343,7 +397,13 @@ def manage_stock(request):
         try:
             item = Item.objects.get(id=item_id)
             warehouse = Warehouse.objects.first()  # Assuming single warehouse
-            color = Color.objects.get(id=color_id) if color_id else None
+
+            if item.color:
+                color = item.color
+            elif color_id:
+                color = Color.objects.get(id=color_id)
+            else:
+                color = None
 
             warehouse_item, created = WarehouseItem.objects.get_or_create(
                 warehouse=warehouse,
@@ -464,93 +524,7 @@ def signup(request):
 
     return render(request, 'registration/signup.html', {'form': form})
 
-@staff_member_required
-def add_item(request, item_id=None, warehouseItem_id=None):
-    color_choices = Color.objects.all()
-    item = None
-    warehouse_item = None
-    current_color = None
 
-    # Hae item ja warehouse_item jos item_id on annettu
-    if item_id:
-        item = get_object_or_404(Item, id=item_id)
-        warehouse_item = WarehouseItem.objects.filter(id=warehouseItem_id).first()
-        if warehouse_item:
-            current_color = warehouse_item.color
-        elif item.color:
-            current_color = item.color
-
-    if request.method == 'POST':
-        form = ItemForm(request.POST, instance=item)
-        quantity_form = QuantityForm(request.POST)
-        
-        if form.is_valid() and quantity_form.is_valid():
-            try:
-                with transaction.atomic():
-                    # Käsittele väri
-                    selected_color_id = request.POST.get('color_id')
-                    new_color_name = form.cleaned_data.get('new_color')
-                    color = None
-                    
-                    if selected_color_id and selected_color_id != '':
-                        color = get_object_or_404(Color, id=selected_color_id)
-                    elif new_color_name:
-                        color, created = Color.objects.get_or_create(color=new_color_name)
-                    
-                    # Tallenna tuote
-                    item = form.save(commit=False)
-                    if color:
-                        item.color = color
-                    item.save()
-                    
-                    # Päivitä tai luo warehouse_item
-                    warehouse = Warehouse.objects.first()
-                    if not warehouse:
-                        warehouse = Warehouse.objects.create(name="Varasto")
-                    
-                    if warehouseItem_id:
-                        warehouse_item = get_object_or_404(WarehouseItem, id=warehouseItem_id)
-                        created = False
-                    else:
-                        warehouse_item, created = WarehouseItem.objects.get_or_create(
-                            warehouse=warehouse,
-                            item=item,
-                            defaults={'quantity': quantity_form.cleaned_data['quantity'],
-                                        'color': color}
-                        )
-                    
-                    if not created:
-                        warehouse_item.quantity = quantity_form.cleaned_data['quantity']
-                        if color:
-                            warehouse_item.color = color
-                        warehouse_item.save()
-                
-                if item_id:
-                    messages.success(request, "Tuote päivitetty onnistuneesti!")
-                else:
-                    messages.success(request, "Tuote lisätty onnistuneesti!")
-                return redirect('manage_stock')
-                
-            except Exception as e:
-                logger.error(f"Error saving item: {e}")
-                friendly_error = format_database_error(e)
-                messages.error(request, friendly_error)
-        else:
-            messages.error(request, "Tarkista lomakkeen tiedot")
-    else:
-        # GET-pyyntö - alusta lomakkeet
-        form = ItemForm(instance=item)
-        initial_quantity = warehouse_item.quantity if warehouse_item else 0
-        quantity_form = QuantityForm(initial={'quantity': initial_quantity})
-    
-    return render(request, 'add_item.html', {
-        'form': form,
-        'quantity_form': quantity_form,
-        'is_edit': item_id is not None,
-        'item': item,
-        'color_choices': color_choices,
-        'color': current_color  # Lähetetään templateen nykyinen väri
-    })
 
 @staff_member_required
 def register_warehouse_staff(request):
@@ -573,8 +547,166 @@ def register_warehouse_staff(request):
         form = WarehouseStaffRegistrationForm()
     return render(request, 'registration/register_warehouse_staff.html', {'form': form})
 
+
+@staff_member_required
 def delete_item(request, item_id):
     item = get_object_or_404(WarehouseItem, id=item_id)
     item.delete()
     messages.success(request, "Tuote poistettu onnistuneesti!")
     return redirect('manage_stock')
+
+
+
+
+
+@login_required
+@warehouse_staff_required
+def edit_quantity_only(request, warehouse_item_id):
+    """
+    View  -  for Warehouse Staff only editing quantity of a WarehouseItem.
+    """
+    warehouse_item = get_object_or_404(WarehouseItem, id=warehouse_item_id)
+    
+    if request.method == 'POST':
+        form = WarehouseStaffQuantityForm(request.POST, instance=warehouse_item)
+        if form.is_valid():
+            try:
+                form.save()
+                # warehouse_item.quantity = form.cleaned_data['quantity']
+                # warehouse_item.save()
+                messages.success(request, "Määrä päivitetty onnistuneesti!")
+                return redirect('manage_stock')
+            except Exception as e:
+                logger.error(f"Error updating quantity: {e}")
+                messages.error(request, "Virhe määrän päivityksessä")
+    else:
+        # form = WarehouseStaffQuantityForm(initial={'quantity': warehouse_item.quantity})
+        form = WarehouseStaffQuantityForm(instance=warehouse_item) 
+    
+    return render(request, 'edit_quantity.html', {
+        'form': form,
+        'warehouse_item': warehouse_item
+    })
+
+
+@staff_or_warehouse_required
+def add_item(request, item_id=None, warehouseItem_id=None):
+    is_warehouse_user = is_warehouse_staff(request.user)
+    
+    # Warehouse Staff не может добавлять новые товары
+    if is_warehouse_user and not warehouseItem_id and not item_id:
+        messages.error(request, "Sinulla ei ole oikeutta lisätä uusia tuotteita. Voit vain muokata määriä.")
+        return redirect('manage_stock')
+
+    color_choices = Color.objects.all()
+    item = None
+    warehouse_item = None
+    current_color = None
+
+    # Получаем item и warehouse_item если item_id указан
+    if item_id:
+        item = get_object_or_404(Item, id=item_id)
+        warehouse_item = WarehouseItem.objects.filter(id=warehouseItem_id).first()
+        if warehouse_item:
+            current_color = warehouse_item.color
+        elif item.color:
+            current_color = item.color
+
+    if request.method == 'POST':
+        if is_warehouse_user and warehouse_item:
+            form = WarehouseStaffQuantityForm(request.POST, instance=warehouse_item)
+            quantity_form = None
+        else:
+            form = ItemForm(request.POST, instance=item)
+            quantity_form = QuantityForm(request.POST)
+
+        if is_warehouse_user:
+            # Только обновление количества для Warehouse Staff
+            if form.is_valid():
+                try:
+                    form.save()
+                    messages.success(request, "Määrä päivitetty onnistuneesti!")
+                    return redirect('manage_stock')
+                except Exception as e:
+                    logger.error(f"Error updating quantity: {e}")
+                    messages.error(request, "Virhe määrän päivityksessä")
+        else:    
+            if form.is_valid() and quantity_form.is_valid():
+                try:
+                    with transaction.atomic():
+                        # Обработка цвета
+                        selected_color_id = request.POST.get('color_id')
+                        new_color_name = form.cleaned_data.get('new_color')
+                        color = None
+                        
+                        # Приоритет: новый цвет > выбранный цвет
+                        if new_color_name and new_color_name.strip():
+                            # Создаем новый цвет
+                            color, created = Color.objects.get_or_create(
+                                color=new_color_name.strip()
+                            )
+                            print(f"Created new color: {color.color} (ID: {color.id})")
+                        elif selected_color_id and selected_color_id != '':
+                            # Используем выбранный цвет
+                            color = get_object_or_404(Color, id=selected_color_id)
+                            print(f"Using selected color: {color.color} (ID: {color.id})")
+                        
+                        # Сохраняем товар
+                        item = form.save(commit=False)
+                        if color:
+                            item.color = color
+                        item.save()
+                        print(f"Item saved with color: {item.color}")
+                    
+                        # Обновляем или создаем warehouse_item
+                        warehouse = Warehouse.objects.first()
+                        if not warehouse:
+                            warehouse = Warehouse.objects.create(name="Varasto")
+                        
+                        if warehouseItem_id:
+                            warehouse_item = get_object_or_404(WarehouseItem, id=warehouseItem_id)
+                            created = False
+                        else:
+                            warehouse_item, created = WarehouseItem.objects.get_or_create(
+                                warehouse=warehouse,
+                                item=item,
+                                color=color,
+                                defaults={'quantity': quantity_form.cleaned_data['quantity']}
+                            )
+                        
+                        if not created:
+                            warehouse_item.quantity = quantity_form.cleaned_data['quantity']
+                            if color:
+                                warehouse_item.color = color
+                            warehouse_item.save()
+                
+                    if item_id:
+                        messages.success(request, "Tuote päivitetty onnistuneesti!")
+                    else:
+                        messages.success(request, "Tuote lisätty onnistuneesti!")
+                    return redirect('manage_stock')
+                    
+                except Exception as e:
+                    logger.error(f"Error saving item: {e}")
+                    friendly_error = format_database_error(e)
+                    messages.error(request, friendly_error)
+            else:
+                messages.error(request, "Tarkista lomakkeen tiedot")
+    else:
+        if is_warehouse_user and warehouse_item:
+            form = WarehouseStaffQuantityForm(instance=warehouse_item)
+            quantity_form = None
+        else:
+            form = ItemForm(instance=item)
+            initial_quantity = warehouse_item.quantity if warehouse_item else 0
+            quantity_form = QuantityForm(initial={'quantity': initial_quantity})
+        
+    return render(request, 'add_item.html', {
+        'form': form,
+        'quantity_form': quantity_form,
+        'is_edit': item_id is not None,
+        'item': item,
+        'color_choices': color_choices,
+        'color': current_color,
+        'is_warehouse_staff': is_warehouse_user
+    })

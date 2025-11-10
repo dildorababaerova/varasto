@@ -1,5 +1,5 @@
 from django import forms
-from .models import CartItem, Order,Item, Color
+from .models import CartItem, Order,Item, Color, WarehouseItem
 from django.core.validators import EmailValidator, RegexValidator
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
@@ -56,7 +56,7 @@ class ColorSelectWithAdd(forms.Select):
         attrs.update({'class': 'form-select'})
         self.attrs = attrs
 
-
+### ISSUE ei käytetty
 # ItemForm for creating and updating items with color selection
 class ItemForm(forms.ModelForm):
     color = forms.ModelChoiceField(
@@ -78,17 +78,21 @@ class ItemForm(forms.ModelForm):
     
     class Meta:
         model = Item
-        fields = ['koodi', 'nimike', 'category', 'color']
+        # fields = ['koodi', 'nimike', 'category', 'is_frequently_used']  # ← ДОБАВЛЕНО поле
+        fields = ['koodi', 'nimike', 'category']  # ← ДОБАВЛЕНО поле
         widgets = {
             'koodi': forms.TextInput(attrs={'class': 'form-control'}),
             'nimike': forms.TextInput(attrs={'class': 'form-control'}),
-            'category': forms.Select(attrs={'class': 'form-control'}, choices=Item.CATEGORY_CHOICES)
+            'category': forms.Select(attrs={'class': 'form-control'}, choices=Item.CATEGORY_CHOICES),
+            # 'is_frequently_used': forms.CheckboxInput(attrs={'class': 'form-check-input'})
         }
         labels = {
             'koodi': 'Tuotekoodi',
             'nimike': 'Nimike',
-            'category': 'Kategoria'
+            'category': 'Kategoria',
+            # 'is_frequently_used': 'Usein käytetty'
         }
+
 
 class QuantityForm(forms.Form):
     quantity = forms.IntegerField(
@@ -200,3 +204,20 @@ class WarehouseStaffRegistrationForm(UserCreationForm):
             user.groups.add(warehouse_staff_group)
             print("Groups after:", user.groups.all())  # Debug
         return user
+    
+
+    # forms.py
+class WarehouseStaffQuantityForm(forms.ModelForm):
+    class Meta:
+        model = WarehouseItem
+        fields = ['quantity']
+        widgets = {
+            'quantity': forms.NumberInput(attrs={
+                'class': 'form-control',
+                'min': '0'
+            })
+        }
+        labels = {
+            'quantity': 'Määrä'
+        }
+

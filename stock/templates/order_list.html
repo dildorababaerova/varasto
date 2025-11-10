@@ -27,7 +27,7 @@
                         <td>{{ order.created_at|date:"d.m.Y H:i" }}</td>
                         <td>
                             {% for item in order.cart.items.all %}
-                            {{ item.quantity }} × {{ item.item.nimike }}<br>
+                            {{ item.quantity }} × {{ item.item.koodi }} {{ item.item.color }}<br>
                             {% endfor %}
                         </td>
                         <td>

@@ -40,6 +40,7 @@ class Item(models.Model):
     category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, default='integraalit')
     color = models.ForeignKey(Color, on_delete=models.SET_NULL, null=True, blank=True)
     
+    
     class Meta:
         managed = True
         verbose_name = 'Tuote'
@@ -74,7 +75,12 @@ class WarehouseItem(models.Model):
     last_updated = models.DateTimeField(auto_now=True)
 
     class Meta:
-        unique_together = ('warehouse', 'item', 'color')
+        constraints = [
+            models.UniqueConstraint(
+                fields=['warehouse', 'item', 'color'],
+                name='unique_warehouse_item_color'
+            )
+        ]
         verbose_name = 'Varaston tuote'
         verbose_name_plural = 'Varaston tuotteet'
 

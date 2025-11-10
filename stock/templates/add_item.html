@@ -56,24 +56,66 @@
 </style>
 {% endblock %}
 
-{% block title %}{% if is_edit %}Muokkaa tuotetta{% else %}Lisää uusi tuote{% endif %}{% endblock %}
+
+{% block title %}
+    {% if is_warehouse_staff %}Muokkaa määrää
+    {% elif is_edit %}
+    Muokkaa tuotetta
+    {% else %}Lisää uusi tuote
+    {% endif %}
+{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
+    <!-- restrict warehouse staff -->
+    {% if is_warehouse_staff %}
+        <div class="alert alert-info">
+            <strong>Huomio:</strong> Olet varastotyöntekijä - voit muokata vain määrää.
+        </div>
+    {% endif %}
+    
+    
     <div class="row justify-content-center">
         <div class="col-lg-10">
             <div class="card">
                 <div class="card-header bg-primary text-white py-3">
                     <h2 class="h4 mb-0">
                         <i class="fas fa-{% if is_edit %}edit{% else %}plus-circle{% endif %} me-2"></i>
-                        {% if is_edit %}Muokkaa tuotetta{% else %}Lisää uusi tuote{% endif %}
+                        {% if is_warehouse_staff %}Muokkaa määrää{% elif is_edit %}Muokkaa tuotetta{% else %}Lisää uusi tuote{% endif %}
                     </h2>
                 </div>
                 
                 <div class="card-body">
                     <form method="post">
                         {% csrf_token %}
+                        <!-- Added readonly for Warehouse Staff -->
+                        {% if is_warehouse_staff %}
+                            <div class="row mb-4">
+                                <div class="col-md-12">
+                                    <div class="alert alert-warning">
+                                        <strong>Tuote:</strong> {{ item.koodi }} - {{ item.nimike }}
+                                        {% if warehouse_item.color %}
+                                            | <strong>Väri:</strong> {{ warehouse_item.color.color }}
+                                        {% endif %}
+                                        | <strong>Nykyinen määrä:</strong> {{ warehouse_item.quantity }}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row mb-4">
+                                <div class="col-md-6 mb-3">
+                                    <label for="id_quantity" class="form-label">Uusi määrä *</label>
+                                    {{ form.quantity }}
+                                    {% if form.quantity.errors %}
+                                        <div class="alert alert-danger mt-2 p-2">
+                                            {{ form.quantity.errors }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
 
+                        {% else %}
+                        
                         <!-- Tärkeät kentät -->
                         <div class="row mb-4">
                             <div class="col-md-6 mb-3">
@@ -115,6 +157,21 @@
                                     </div>
                                 {% endif %}
                             </div>
+
+                            <!-- ДОБАВЛЕНО: Поле is_frequently_used -->
+                            <div class="col-md-12 mb-3">
+                                <div class="form-check">
+                                    {{ form.is_frequently_used }}
+                                    <label class="form-check-label" for="id_is_frequently_used">
+                                        {{ form.is_frequently_used.label }}
+                                    </label>
+                                </div>
+                                {% if form.is_frequently_used.errors %}
+                                    <div class="alert alert-danger mt-2 p-2">
+                                        {{ form.is_frequently_used.errors }}
+                                    </div>
+                                {% endif %}
+                            </div>
                         </div>
 
                         <!-- Väri valinta osio -->
@@ -147,14 +204,17 @@
                                 {% endif %}
                             </div>
                         </div>
-                        
+                        {% endif %}                       
                         <!-- Napit -->
                         <div class="d-flex gap-2 justify-content-end mt-4 pt-3 border-top">
                             <a href="{% url 'manage_stock' %}" class="btn btn-secondary">
                                 <i class="fas fa-times me-1"></i> Peruuta
                             </a>
                             <button type="submit" class="btn btn-success">
-                                <i class="fas fa-save me-1"></i> Tallenna
+                                <i class="fas fa-save me-1"></i> 
+                                {% if is_warehouse_staff %}Päivitä määrä
+                                {% elif is_edit %}Päivitä tuote
+                                {% else %}Tallenna tuote{% endif %}
                             </button>
                         </div>
                     </form>
@@ -185,6 +245,23 @@
         </div>
     </div>
 </div>
+<!-- Modali ikkuna värien vahvistamiseksi -->
+<div class="modal fade" id="colorConfirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Väri lisätty</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="colorConfirmMessage">Uusi väri on lisätty. Muista tallentaa lomake!</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
@@ -193,17 +270,29 @@ document.addEventListener('DOMContentLoaded', function() {
     // Värien lisääminen
     document.getElementById('saveNewColor').addEventListener('click', function() {
         const colorName = document.getElementById('newColorName').value.trim();
+        const confirmMessage = document.getElementById('colorConfirmMessage');
+        
         if (colorName) {
             // Täytetään uuden värin kenttä
             document.getElementById('id_new_color').value = colorName;
-            // Suljetaan modaalinen ikkuna
-            const modal = bootstrap.Modal.getInstance(document.getElementById('colorModal'));
-            modal.hide();
             
-            // Näytetään vahvistusviesti
-            alert('Uusi väri "' + colorName + '" on lisätty. Muista tallentaa lomake!');
+            // Suljetaan värien lisäys modaalinen ikkuna
+            const colorModal = bootstrap.Modal.getInstance(document.getElementById('colorModal'));
+            colorModal.hide();
+            
+            // Näytetään vahvistusmodaali
+            confirmMessage.textContent = 'Uusi väri "' + colorName + '" on lisätty. Muista tallentaa lomake!';
+            const confirmModal = new bootstrap.Modal(document.getElementById('colorConfirmModal'));
+            confirmModal.show();
+            
+            // Tyhjennetään syöttökenttä seuraavaa käyttöä varten
+            document.getElementById('newColorName').value = '';
+            
         } else {
-            alert('Kirjoita värin nimi ennen tallentamista.');
+            // Virheviesti
+            confirmMessage.textContent = 'Kirjoita värin nimi ennen tallentamista.';
+            const confirmModal = new bootstrap.Modal(document.getElementById('colorConfirmModal'));
+            confirmModal.show();
         }
     });
 
@@ -219,6 +308,17 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('saveNewColor').click();
         }
     });
+    
+    // Для Warehouse Staff - делаем все поля кроме quantity readonly
+    {% if is_warehouse_staff %}
+        const inputs = document.querySelectorAll('input, select, textarea');
+        inputs.forEach(input => {
+            if (input.name !== 'quantity') {
+                input.readOnly = true;
+                input.disabled = true;
+            }
+        });
+    {% endif %}
 });
 </script>
 {% endblock %}

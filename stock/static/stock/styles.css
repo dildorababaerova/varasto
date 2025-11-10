@@ -193,33 +193,36 @@ footer a:hover {
 
 
 .signup-form .button a {
-
-
-
     color: #fff;
-
-
-
 }
 
 
 
 .signup-form .button:hover  {
-
-
     background-color: #1a47c4;
 
 }
-@media (min-width: 850px) {
-    .menutext {
-        display: none;
-    }
+.menutext {
+    display: inline-block;
+    color: white;                /* Белый текст */
+    font-weight: 500;
+    text-decoration: none;       /* Без подчёркивания */
+    font-size: 16px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    transition: background 0.3s ease, color 0.3s ease;
 }
 
-@media (min-width: 1000px) {
-    .menutext {
-        display: inline;
-    }
+/* Эффект наведения */
+.menutext:hover {
+    background-color: white;
+    color: #0d6efd;
+    text-decoration: none;
+}
+.menutext:active {
+    background-color: #0d6efd;
+    color: white;
+    text-decoration: none;
 }
 
 

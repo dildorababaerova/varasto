@@ -1,0 +1,66 @@
+<!-- templates/edit_quantity.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Muokkaa määrää</h2>
+    
+    <div class="card shadow-sm">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Tuotetiedot</h5>
+        </div>
+        <div class="card-body">
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <p><strong>Tuotekoodi:</strong> {{ warehouse_item.item.koodi }}</p>
+                    <p><strong>Nimike:</strong> {{ warehouse_item.item.nimike }}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Väri:</strong> 
+                        {% if warehouse_item.color %}
+                            <span class="badge badge-secondary">{{ warehouse_item.color.color }}</span>
+                        {% else %}
+                            <span class="text-muted">Ei väriä</span>
+                        {% endif %}
+                    </p>
+                    <p><strong>Nykyinen määrä:</strong> 
+                        <span class="badge badge-primary badge-pill">{{ warehouse_item.quantity }}</span>
+                    </p>
+                </div>
+            </div>
+            
+            <hr>
+            
+            <h5 class="mb-3">Päivitä määrä</h5>
+            <form method="post">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="{{ form.quantity.id_for_label }}" class="font-weight-bold">
+                        {{ form.quantity.label }}
+                    </label>
+                    {{ form.quantity }}
+                    {% if form.quantity.help_text %}
+                        <small class="form-text text-muted">{{ form.quantity.help_text }}</small>
+                    {% endif %}
+                    {% if form.quantity.errors %}
+                        <div class="alert alert-danger mt-2">
+                            {% for error in form.quantity.errors %}
+                                <p class="mb-0">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group mt-4">
+                    <button type="submit" class="btn btn-success btn-lg">
+                        <i class="fas fa-save"></i> Päivitä määrä
+                    </button>
+                    <a href="{% url 'manage_stock' %}" class="btn btn-outline-secondary btn-lg">
+                        <i class="fas fa-times"></i> Peruuta
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
